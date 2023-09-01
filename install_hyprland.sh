@@ -22,7 +22,7 @@ clear
 # Install Packages
 yay -Syu --noconfirm \
 sddm qt5-wayland qt5ct waybar wofi xdg-desktop-portal-hyprland qt6-wayland qt6ct qt5-svg qt5-quickcontrols2 qt5-graphicaleffects gtk3 \
-polkit-gnome pipewire pipewire-pulse pipewire-jack wireplumber jq wl-clipboard cliphist timeshift wat-git rmlint rebuild-detector downgrade informant \
+polkit-gnome pipewire pipewire-pulse pipewire-jack wireplumber jq wl-clipboard cliphist timeshift wat-git rmlint rebuild-detector downgrade \
 python-requests pacman-contrib lxappearance file-roller gvfs thunar thunar-archive-plugin bluez bluez-utils pavucontrol pamixer btop mpv \
 network-manager-applet blueman grim slurp swappy linux-headers \
 steam gamescope discord gamemode mangohud lutris wine-staging protonup-qt \
@@ -71,6 +71,9 @@ sudo systemctl enable sddm
 # Creating the Hyprland wayland session
 sudo mkdir -p /usr/share/wayland-sessions
 echo -e "[Desktop Entry]\nName=Hyprland\nComment=An intelligent dynamic tiling Wayland compositor\nExec=Hyprland\nType=Application" | sudo tee -a /usr/share/wayland-sessions/hyprland.conf
+
+# Installing informant last because it is destroying my autoinstall script.
+yay -Syu informant
 
 # Removing install files and reboot the system
 cd && rm -rf hypr-arch
