@@ -9,6 +9,9 @@ cd yay && makepkg -si --noconfirm
 cd .. && rm -rf yay
 yay -R --noconfirm xdg-desktop-portal-gnome xdg-desktop-portal-gtk
 
+# Enable Multilib
+sudo sed -i "/\[multilib\]/,/Include/"'s/^#//' /etc/pacman.conf
+
 # Adding the dotfiles
 cp -r dotfiles/* ~/.config
 
@@ -34,15 +37,17 @@ sudo systemctl restart NetworkManager
 if lspci -k | grep -A 2 -E "(VGA|3D)" | grep -iq nvidia; then
    yay -Syu --noconfirm nvidia-dkms libva libva-nvidia-driver hyprland-nvidia
 
-   echo -e "\n MODULES=(btrfs nvidia nvidia_modeset nvidia_uvm nvidia_drm)" | sudo tee -a /etc/mkinitcpio.conf
+   sudo mkdir -p /etc/modprobe.d
+   sudo touch /etc/modprobe.d/nvidia.conf
+   echo -e "\nMODULES=(btrfs nvidia nvidia_modeset nvidia_uvm nvidia_drm)" | sudo tee -a /etc/mkinitcpio.conf
    echo -e "options nvidia-drm modeset=1\noptions nvidia NVreg_UsePageAttributeTable=1\noptions nvidia NVreg_EnableResizableBar=1\noptions nvidia NVreg_RegistryDwords="PowerMizerEnable=0x1; PerfLevelSrc=0x2222; PowerMizerLevel=0x3; PowerMizerDefault=0x3; PowerMizerDefaultAC=0x3"" | sudo tee -a /etc/modprobe.d/nvidia.conf
    sudo mkinitcpio -P
 
    # Adding Pacman hook to update initramfs after Nvidia driver upgrade
    echo -e "[Trigger]\nOperation=Install\nOperation=Upgrade\nOperation=Remove\nType=Package\nTarget=nvidia-dkms\nTarget=usr/lib/modules/*/vmlinuz\n\n[Action]\nDescription=Update NVIDIA module in initcpio\nDepends=mkinitcpio\nWhen=PostTransaction\nNeedsTargets\nExec=/bin/sh -c 'while read -r trg; do case $trg in linux*) exit 0; esac; done; /usr/bin/mkinitcpio -P'" | sudo tee -a /etc/pacman.d/hooks/nvidia.hook
 
-   sudo sed -i 's/GRUB_CMDLINE_LINUX_DEFAULT="loglevel=3" /GRUB_CMDLINE_LINUX_DEFAULT="loglevel=3 quiet nvidia_drm.modeset=1"/' /etc/default/grub
-   sudo sed -i 's/GRUB_TIMEOUT=5 /GRUB_TIMEOUT=1/' /etc/default/grub 
+   sudo sed -i 's/GRUB_CMDLINE_LINUX_DEFAULT="loglevel=3 quiet"/GRUB_CMDLINE_LINUX_DEFAULT="loglevel=3 quiet nvidia_drm.modeset=1"/g' /etc/default/grub
+   sudo sed -i 's/GRUB_TIMEOUT=5/GRUB_TIMEOUT=1/g' /etc/default/grub 
    sudo grub-mkconfig -o /boot/grub/grub.cfg
 
 else
