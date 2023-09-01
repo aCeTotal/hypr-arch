@@ -11,6 +11,7 @@ yay -R --noconfirm xdg-desktop-portal-gnome xdg-desktop-portal-gtk
 
 # Enable Multilib
 sudo sed -i "/\[multilib\]/,/Include/"'s/^#//' /etc/pacman.conf
+sudo pacman -Syu --noconfirm
 
 # Adding the dotfiles
 cp -r dotfiles/* ~/.config
