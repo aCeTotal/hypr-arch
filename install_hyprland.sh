@@ -109,7 +109,7 @@ sudo mkdir -p /usr/share/wayland-sessions
 echo -e "[Desktop Entry]\nName=Hyprland\nComment=An intelligent dynamic tiling Wayland compositor\nExec=Hyprland\nType=Application" | sudo tee -a /usr/share/wayland-sessions/hyprland.conf
 
 # Installing informant last because it is destroying my autoinstall script.
-yay -Syu informant
+yay -Syu --noconfirm informant
 
 # Removing install files and reboot the system
 cd && rm -rf hypr-arch
