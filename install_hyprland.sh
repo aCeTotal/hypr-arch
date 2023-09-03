@@ -26,7 +26,7 @@ clear
 # Install Packages
 yay -Syu --noconfirm \
 sddm qt5-wayland qt5ct waybar wofi xdg-desktop-portal-hyprland qt6-wayland qt6ct qt5-svg qt5-quickcontrols2 qt5-graphicaleffects gtk3 \
-polkit-gnome pipewire swaybg pipewire-pulse pipewire-jack wireplumber jq wl-clipboard cliphist timeshift wat-git rmlint rebuild-detector downgrade \
+polkit-gnome pipewire swaybg pipewire-pulse pipewire-jack wireplumber jq wl-clipboard cliphist timeshift wat-git rmlint rebuild-detector downgrade p7zip unrar zip unzip \
 python-requests pacman-contrib lxappearance file-roller gvfs thunar thunar-archive-plugin bluez bluez-utils pavucontrol pamixer btop mpv \
 network-manager-applet blueman grim slurp swappy linux-headers firewalld fail2ban \
 gamescope discord gamemode mangohud lutris wine-staging protonup-qt vulkan-tools \
