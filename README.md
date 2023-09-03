@@ -18,10 +18,10 @@ These scripts installs my system with Arch Linux and Hyprland. Configured for ma
 
 9. You can now log in to use your system. Make your own changes in hyprland config: vim .config/hypr/hyprland.conf, especially screen resolution, framerate and bindings. Until that happens:
 
-SUPER + Enter = Terminal
-SUPER + P = App launcher
-SUPER + BACKSPACE = Browser
-SUPER + E = File Browser
+SUPER + Enter = Terminal, 
+SUPER + P = App launcher, 
+SUPER + BACKSPACE = Browser, 
+SUPER + E = File Browser, 
 SUPER + S = SCREENSHOT
 
 ================
