@@ -22,7 +22,8 @@ SUPER + Enter = Terminal,
 SUPER + P = App launcher, 
 SUPER + BACKSPACE = Browser, 
 SUPER + E = File Browser, 
-SUPER + S = SCREENSHOT
+SUPER + S = SCREENSHOT, 
+Change workspace with SUPER + [1-9]
 
 ================
 
