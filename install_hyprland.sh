@@ -40,7 +40,10 @@ echo -e "[connection]\nwifi.powersave = 2" | sudo tee -a /etc/NetworkManager/con
 sudo systemctl restart NetworkManager
 
 # Manual confirm Steam to Choose the correct Vulkan package.
-echo "SELECT THE CORRECT VULKAN PACKAGE WHEN YOU ARE ASKED FOR IT!"
+echo "SELECT THE CORRECT VULKAN-DRIVER!"
+echo "SELECT THE CORRECT VULKAN-DRIVER!"
+echo "SELECT THE CORRECT VULKAN-DRIVER!"
+echo "SELECT THE CORRECT VULKAN-DRIVER!"
 sudo pacman -Syu steam
 
 # Check if NVIDIA GPU is found
