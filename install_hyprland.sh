@@ -29,7 +29,7 @@ sddm qt5-wayland qt5ct waybar wofi xdg-desktop-portal-hyprland qt6-wayland qt6ct
 polkit-gnome pipewire swaybg pipewire-pulse pipewire-jack wireplumber jq wl-clipboard cliphist timeshift wat-git rmlint rebuild-detector downgrade \
 python-requests pacman-contrib lxappearance file-roller gvfs thunar thunar-archive-plugin bluez bluez-utils pavucontrol pamixer btop mpv \
 network-manager-applet blueman grim slurp swappy linux-headers firewalld fail2ban \
-steam gamescope discord gamemode mangohud lutris wine-staging protonup-qt \
+steam gamescope discord gamemode mangohud lutris wine-staging protonup-qt vulkan-tools \
 alacritty firefox rider blender pureref gimp \
 icaclient nfs-utils network-manager-sstp sstp-client github-cli \
 ttf-jetbrains-mono-nerd papirus-icon-theme \
@@ -78,14 +78,19 @@ TXT
    sudo sed -i 's/GRUB_CMDLINE_LINUX_DEFAULT="loglevel=3 quiet"/GRUB_CMDLINE_LINUX_DEFAULT="loglevel=3 quiet nvidia_drm.modeset=1"/g' /etc/default/grub
    sudo sed -i 's/GRUB_TIMEOUT=5/GRUB_TIMEOUT=1/g' /etc/default/grub 
    sudo grub-mkconfig -o /boot/grub/grub.cfg
+   # Temp fix
    sudo rm /usr/share/vulkan/icd.d/amd_icd*
+   sudo pacman -R --noconfirm vulkan-radeon amdvlk vulkan-amdgpu-pro
+   sudo pacman -Syu --noconfirm nvidia-utils
 
 else
    yay -Syu --noconfirm hyprland
 
    echo -e "\nMODULES=(btrfs)" | sudo tee -a /etc/mkinitcpio.conf
    sudo grub-mkconfig -o /boot/grub/grub.cfg
+   # Temp fix
    sudo rm /usr/share/vulkan/icd.d/nvidia_icd*
+   sudo pacman -R --noconfirm nvidia-utils
 fi
 
 # Adding theme for SDDM
