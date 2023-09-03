@@ -2,7 +2,7 @@ These scripts installs my system with Arch Linux and Hyprland. Configured for ma
 
 1. Download the latest image of Arch Linux and place it on a memory stick with Ventoy or similar.
 
-2. Make sure your BIOS is set to only use UEFI and disable Secure Boot.
+2. Make sure your BIOS is set to only use UEFI and Secure Boot disabled.
 
 3. Boot up Arch Linux -> If you don't normally use an English keyboard, change the keyboard layout with loadkeys (eg loadkeys no-latin1 for Norwegian) -> make sure you have internet (ping google.com).
 
