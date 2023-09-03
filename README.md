@@ -1,4 +1,4 @@
-These scripts installs my system with Arch Linux and Hyprland. Configured for maximum performance with Nvidia GPUs.
+These scripts installs my system with Arch Linux and Hyprland. Configured for maximum performance with Nvidia GPUs. (AMD and Intel GPU does work aswell)
 
 1. Download the latest image of Arch Linux and place it on a memory stick with Ventoy or similar.
 
