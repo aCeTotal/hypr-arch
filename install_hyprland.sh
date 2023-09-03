@@ -111,6 +111,12 @@ sudo systemctl enable fail2ban.service # https://wiki.archlinux.org/title/Fail2b
 sudo mkdir -p /usr/share/wayland-sessions
 echo -e "[Desktop Entry]\nName=Hyprland\nComment=An intelligent dynamic tiling Wayland compositor\nExec=Hyprland\nType=Application" | sudo tee -a /usr/share/wayland-sessions/hyprland.conf
 
+# Adding NFS Shares and creating Cache-folder for ICACLIENT
+sudo mkdir -p ~/.ICACLIENT/cache
+sudo mkdir -p /mnt/14tb
+sudo go=rwx /mnt/14tb && sudo chown lars: /mnt/14tb
+echo -e "#NFS\n192.168.0.40:/bigdisk1        /mnt/14tb       nfs     rw,defaults,noauto,nofail,users,x-systemd.automount,x-systemd.device-timeout=30,_netdev 0 0" | sudo tee -a /etc/fstab
+
 # Installing informant last because it is destroying my autoinstall script.
 yay -Syu --noconfirm informant
 
