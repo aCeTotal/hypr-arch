@@ -16,7 +16,7 @@ These scripts installs my system with Arch Linux and Hyprland. Configured for ma
 
 8. ./install_hyprland.sh
 
-9. You can now log in to use your system. Make your own changes in hyprland config: vim .config/hypr/hyprland.conf, especially screen resolution, framerate and bindings. Until that happens:
+9. You can now log in to use your system. (You may need to hit the user icon in the middle of the SDDM/Login screen to select your user.) Make your own changes in hyprland config: vim .config/hypr/hyprland.conf, especially screen resolution, framerate and bindings. Until that happens:
 
 SUPER + Enter = Terminal, 
 SUPER + P = App launcher, 
