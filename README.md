@@ -26,6 +26,6 @@ SUPER + S = SCREENSHOT
 
 ================
 
-10. In steam, make sure you select Proton Experimental - Bleeding Edge, for the latest edition of Proton and DXVK. Very important. (Right click on Proton Experimental -> betas -> Select Bleeding Edge.)
+10. In steam, make sure you select Proton Experimental - Bleeding Edge, for the latest version of Proton and DXVK. Very important. (Right click on Proton Experimental -> betas -> Select Bleeding Edge.)
 
 11. Good luck! :)
