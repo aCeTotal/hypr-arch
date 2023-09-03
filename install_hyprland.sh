@@ -78,12 +78,14 @@ TXT
    sudo sed -i 's/GRUB_CMDLINE_LINUX_DEFAULT="loglevel=3 quiet"/GRUB_CMDLINE_LINUX_DEFAULT="loglevel=3 quiet nvidia_drm.modeset=1"/g' /etc/default/grub
    sudo sed -i 's/GRUB_TIMEOUT=5/GRUB_TIMEOUT=1/g' /etc/default/grub 
    sudo grub-mkconfig -o /boot/grub/grub.cfg
+   sudo rm /usr/share/vulkan/icd.d/amd_icd*
 
 else
    yay -Syu --noconfirm hyprland
 
    echo -e "\nMODULES=(btrfs)" | sudo tee -a /etc/mkinitcpio.conf
    sudo grub-mkconfig -o /boot/grub/grub.cfg
+   sudo rm /usr/share/vulkan/icd.d/nvidia_icd*
 fi
 
 # Adding theme for SDDM
