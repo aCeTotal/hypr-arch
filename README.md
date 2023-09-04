@@ -1,4 +1,4 @@
-These scripts installs my system with Arch Linux and Hyprland. Configured for maximum performance with Nvidia GPUs. (AMD and Intel GPU does work aswell) - IMPORTANT: WORK-IN-PROGRESS - but works great!
+These scripts give you my system with Arch Linux and Hyperland. Neat and fast system with maximum gaming performance with Nvidia (Other GPU's does work aswell). The scripts are still work-in-progress, but exactly the same as I use. It works and as of now has given me the best gaming performance ever on Linux.
 
 1. Download the latest image of Arch Linux and place it on a memory stick with Ventoy or similar.
 
@@ -20,6 +20,7 @@ These scripts installs my system with Arch Linux and Hyprland. Configured for ma
 
 SUPER + Enter = Terminal, 
 SUPER + P = App launcher, 
+SUPER + Q = Kill Window,
 SUPER + BACKSPACE = Browser, 
 SUPER + E = File Browser, 
 SUPER + S = SCREENSHOT, 
