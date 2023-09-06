@@ -31,7 +31,7 @@ python-requests pacman-contrib lxappearance file-roller gvfs thunar thunar-archi
 network-manager-applet blueman grim slurp swappy linux-headers firewalld fail2ban \
 gamescope discord gamemode mangohud lutris wine-staging protonup-qt vulkan-tools \
 alacritty firefox rider blender pureref gimp \
-icaclient nfs-utils network-manager-sstp sstp-client github-cli \
+icaclient nfs-utils network-manager-sstp sstp-client github-cli github-desktop-bin \
 ttf-jetbrains-mono-nerd papirus-icon-theme \
 
 # Disable WIFI Powersave
