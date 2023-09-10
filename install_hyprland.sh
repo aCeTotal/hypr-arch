@@ -124,6 +124,23 @@ echo -e "#NFS\n192.168.0.40:/bigdisk1        /mnt/14tb       nfs     rw,defaults
 # Installing informant last because it is destroying my autoinstall script.
 yay -Syu --noconfirm informant
 
+# Adding some aliases
+rm /home/$username/.bashrc && touch /home/$username/.bashrc
+/home/$username/.bashrc > /dev/null <<'TXT'
+ #
+ # ~/.bashrc
+ #
+ 
+ # If not running interactively, don't do anything
+ [[ $- != *i* ]] && return
+ 
+ alias ls='ls -lah --color=auto'
+ alias grep='grep --color=auto'
+ alias update='sudo pacman-key --init && sudo pacman-key --populate && sudo pacman -Sy archlinux-keyring --noconfirm && sudo pacman -Su && yay -Syu'
+ alias install='yay -Syu'
+ PS1='[\u@\h \W]\$ '
+TXT
+
 # Removing install files and reboot the system
 cd && rm -rf hypr-arch
 reboot
