@@ -20,6 +20,9 @@ cp -r dotfiles/* ~/.config
 sudo mkdir -p /usr/share/wallpapers/
 sudo cp dotfiles/wallpapers/* /usr/share/wallpapers/
 
+# Adding the user to the input group
+sudo gpasswd -a lars input
+
 # Clear the TTY
 clear
 
@@ -33,6 +36,7 @@ gamescope discord gamemode mangohud lutris wine-staging protonup-qt vulkan-tools
 alacritty firefox rider blender pureref gimp \
 icaclient nfs-utils network-manager-sstp sstp-client github-cli github-desktop-bin \
 ttf-jetbrains-mono-nerd papirus-icon-theme \
+# xone-dkms kodi retroarch retroarch-assets-xmb \
 
 # Disable WIFI Powersave
 sudo touch /etc/NetworkManager/conf.d/wifi-powersave.conf
@@ -90,6 +94,7 @@ else
    yay -Syu --noconfirm hyprland
 
    echo -e "\nMODULES=(btrfs)" | sudo tee -a /etc/mkinitcpio.conf
+   sudo sed -i 's/GRUB_TIMEOUT=5/GRUB_TIMEOUT=1/g' /etc/default/grub 
    sudo grub-mkconfig -o /boot/grub/grub.cfg
 fi
 
