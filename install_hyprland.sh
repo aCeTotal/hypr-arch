@@ -32,7 +32,7 @@ polkit-gnome pipewire swaybg pipewire-pulse pipewire-jack wireplumber jq wl-clip
 python-requests pacman-contrib lxappearance file-roller gvfs thunar thunar-archive-plugin bluez bluez-utils pavucontrol pamixer btop mpv \
 network-manager-applet blueman grim slurp swappy linux-headers firewalld fail2ban \
 gamescope discord gamemode mangohud lutris wine-staging protonup-qt vulkan-tools xone-dkms \
-alacritty firefox rider blender pureref gimp \
+alacritty opera rider blender pureref gimp \
 icaclient nfs-utils network-manager-sstp sstp-client github-cli github-desktop-bin \
 ttf-jetbrains-mono-nerd papirus-icon-theme \
 # kodi retroarch retroarch-assets-xmb \
