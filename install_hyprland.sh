@@ -32,11 +32,11 @@ sddm qt5-wayland qt5ct waybar wofi xdg-desktop-portal-hyprland qt6-wayland qt6ct
 polkit-gnome pipewire swaybg pipewire-pulse pipewire-jack wireplumber jq wl-clipboard cliphist timeshift wat-git rmlint rebuild-detector downgrade p7zip unrar zip unzip \
 python-requests pacman-contrib lxappearance file-roller gvfs thunar thunar-archive-plugin bluez bluez-utils pavucontrol pamixer btop mpv \
 network-manager-applet blueman grim slurp swappy linux-headers firewalld fail2ban \
-gamescope discord gamemode mangohud lutris wine-staging protonup-qt vulkan-tools \
+gamescope discord gamemode mangohud lutris wine-staging protonup-qt vulkan-tools xone-dkms \
 alacritty firefox rider blender pureref gimp \
 icaclient nfs-utils network-manager-sstp sstp-client github-cli github-desktop-bin \
 ttf-jetbrains-mono-nerd papirus-icon-theme \
-# xone-dkms kodi retroarch retroarch-assets-xmb \
+# kodi retroarch retroarch-assets-xmb \
 
 # Disable WIFI Powersave
 sudo touch /etc/NetworkManager/conf.d/wifi-powersave.conf
