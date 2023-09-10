@@ -14,9 +14,11 @@ These scripts give you my system with Arch Linux and Hyperland. Neat and fast sy
 
 7. cd hypr-arch -> sudo chmod +x install_hyprland.sh
 
-8. ./install_hyprland.sh (IMPORTANT! Select the correct VULKAN-DRIVER when you are asked for it!)
+8. Read through the content of install_hyprland.sh and remove packages that you don't need. May break default bindings, but you should always remove packages that you don't need!
 
-9. You can now log in to use your system. (You may need to hit the user icon in the middle of the SDDM/Login screen to select your user.) Make your own changes in hyprland config: vim .config/hypr/hyprland.conf, especially screen resolution, framerate and bindings. Until that happens:
+9. ./install_hyprland.sh (IMPORTANT! Select the correct VULKAN-DRIVER for your GPU!)
+
+10. You can start using your system. (You may need to hit the user icon in the middle of the SDDM/Login screen to select your user.) Make your own changes in hyprland config: vim .config/hypr/hyprland.conf, especially screen resolution, framerate and bindings. Until that happens:
 
 SUPER + Enter = Terminal, 
 SUPER + P = App launcher, 
@@ -30,4 +32,6 @@ Change workspace with SUPER + [1-9]
 
 10. In steam, make sure you select Proton Experimental - Bleeding Edge, for the latest version of Proton and DXVK. Very important. (Right click on Proton Experimental -> betas -> Select Bleeding Edge.)
 
-11. Good luck! :)
+11. Update the system + packages with the command 'update' and install new packages with the command 'install <package>'. (Just a tip and an attempt to make Arch Linux a bit more stable for people who don't update every week.).
+
+12. Good luck! :)
