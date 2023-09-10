@@ -1,7 +1,9 @@
 #!/bin/bash
 #
 # A Simple script to install [aCe]Total's version of Arch Linux with Hyprland. 
-#
+
+# Store the current username in variable
+username="$USER"
 
 # Install Yay
 git clone https://aur.archlinux.org/yay.git
@@ -21,10 +23,7 @@ sudo mkdir -p /usr/share/wallpapers/
 sudo cp dotfiles/wallpapers/* /usr/share/wallpapers/
 
 # Adding the user to the input group
-sudo gpasswd -a lars input
-
-# Clear the TTY
-clear
+sudo gpasswd -a $username input
 
 # Install Packages
 yay -Syu --noconfirm \
@@ -119,7 +118,7 @@ echo -e "[Desktop Entry]\nName=Hyprland\nComment=An intelligent dynamic tiling W
 # Adding NFS Shares and creating Cache-folder for ICACLIENT
 sudo mkdir -p ~/.ICACLIENT/cache
 sudo mkdir -p /mnt/14tb
-sudo go=rwx /mnt/14tb && sudo chown lars: /mnt/14tb
+sudo go=rwx /mnt/14tb && sudo chown $username: /mnt/14tb
 echo -e "#NFS\n192.168.0.40:/bigdisk1        /mnt/14tb       nfs     rw,defaults,noauto,nofail,users,x-systemd.automount,x-systemd.device-timeout=30,_netdev 0 0" | sudo tee -a /etc/fstab
 
 # Installing informant last because it is destroying my autoinstall script.
