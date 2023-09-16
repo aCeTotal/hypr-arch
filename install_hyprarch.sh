@@ -79,9 +79,7 @@ yay -Syu --noconfirm pipewire pipewire-pulse pipewire-jack jq network-manager-ss
 yay -Syu --noconfirm sstp-client github-cli github-desktop-bin wl-clipboard cliphist timeshift wat-git >/dev/null
 yay -Syu --noconfirm rmlint rebuild-detector downgrade p7zip unrar rar zip unzip network-manager-applet >/dev/null
 yay -Syu --noconfirm blueman grim slurp pkgfile swappy linux-headers firewalld >/dev/null
-yay -Syu --noconfirm fail2ban swaybg ttf-jetbrains-mono-nerd papirus-icon-theme ttf-ms-fonts >/dev/null
-info_print "Yep! Replace it!"
-yay -Syu wireplumber
+yay -Syu --noconfirm fail2ban swaybg ttf-jetbrains-mono-nerd papirus-icon-theme ttf-ms-fonts wireplumber >/dev/null
 
 info_print "Installing Gaming-related packages!"
 yay -Syu --noconfirm gamescope discord gamemode mangohud lutris wine-staging protonup-qt vulkan-tools xone-dkms piper >/dev/null
