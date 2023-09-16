@@ -69,22 +69,22 @@ yay -Syu --noconfirm
 
 # Adding the current user to the input group (function)
 info_print "Adding the $USER to the input group"
-sudo gpasswd -a $USER input
+sudo gpasswd -a $USER input >/dev/null
 
 # Installing systempackages (function)
 info_print "Installing system packages!"
-yay -Syu --noconfirm sddm nfs-utils qt5-wayland qt5ct waybar-hyprland wofi xdg-desktop-portal-hyprland \
-qt6-wayland qt6ct qt5-svg qt5-quickcontrols2 qt5-graphicaleffects gtk3 polkit-gnome \
-pipewire pipewire-pulse pipewire-jack jq network-manager-sstp \
-sstp-client github-cli github-desktop-bin wl-clipboard cliphist timeshift wat-git \
-rmlint rebuild-detector downgrade p7zip unrar rar zip unzip network-manager-applet \
-blueman grim slurp pkgfile swappy linux-headers firewalld \
-fail2ban swaybg ttf-jetbrains-mono-nerd papirus-icon-theme ttf-ms-fonts
+yay -Syu --noconfirm sddm nfs-utils qt5-wayland qt5ct waybar-hyprland wofi xdg-desktop-portal-hyprland >/dev/null \ 
+qt6-wayland qt6ct qt5-svg qt5-quickcontrols2 qt5-graphicaleffects gtk3 polkit-gnome >/dev/null \
+pipewire pipewire-pulse pipewire-jack jq network-manager-sstp >/dev/null \
+sstp-client github-cli github-desktop-bin wl-clipboard cliphist timeshift wat-git >/dev/null \
+rmlint rebuild-detector downgrade p7zip unrar rar zip unzip network-manager-applet >/dev/null \
+blueman grim slurp pkgfile swappy linux-headers firewalld >/dev/null \
+fail2ban swaybg ttf-jetbrains-mono-nerd papirus-icon-theme ttf-ms-fonts >/dev/null
 info_print "Yep! Replace it!"
 yay -Syu wireplumber
 
 info_print "Installing Gaming-related packages!"
-yay -Syu --noconfirm --needed gamescope discord gamemode mangohud lutris wine-staging protonup-qt vulkan-tools xone-dkms piper
+yay -Syu --noconfirm --needed gamescope discord gamemode mangohud lutris wine-staging protonup-qt vulkan-tools xone-dkms piper >/dev/null
 
 info_print "Please select the correct VULKAN-DRIVER for your GPU. DO NOT JUST RANDOMLY PRESS ENTER!"
 sudo pacman -Syu steam
@@ -92,11 +92,11 @@ sudo pacman -Syu steam
 # Check if NVIDIA GPU is found
 if lspci -k | grep -A 2 -E "(VGA|3D)" | grep -iq nvidia; then
 info_print "NVIDIA GPU FOUND! Installing nvidia-related packages!"  
-   yay -Syu --noconfirm --needed nvidia-dkms libva libva-nvidia-driver hyprland-nvidia
+   yay -Syu --noconfirm --needed nvidia-dkms libva libva-nvidia-driver hyprland-nvidia >/dev/null
 
 info_print "Creating modprobe config for your Nvidia card for max performance and wayland support" 
-   sudo mkdir -p /etc/modprobe.d
-   sudo touch /etc/modprobe.d/nvidia.conf
+   sudo mkdir -p /etc/modprobe.d >/dev/null
+   sudo touch /etc/modprobe.d/nvidia.conf >/dev/null
    echo -e "\nMODULES=(btrfs nvidia nvidia_modeset nvidia_uvm nvidia_drm)" | sudo tee -a /etc/mkinitcpio.conf >/dev/null
    
    sudo tee /etc/modprobe.d/nvidia.conf > /dev/null <<'TXT'
@@ -107,7 +107,7 @@ info_print "Creating modprobe config for your Nvidia card for max performance an
    options nvidia NVreg_RegistryDwords="PowerMizerEnable=0x1; PerfLevelSrc=0x2222; PowerMizerLevel=0x3; PowerMizerDefault=0x3; PowerMizerDefaultAC=0x3"
 TXT
    
-   sudo mkinitcpio -P
+   sudo mkinitcpio -P >/dev/null
 
    # Adding Pacman hook to update initramfs after Nvidia driver upgrade
 info_print "Creating Pacman hook to automatically update initramfs after every nvidia-driver upgrade" 
@@ -188,13 +188,13 @@ sudo sed -i "s/^Current=/Current=deepin/g" /etc/sddm.conf.d/default.conf
 
 # Enable services
 input_print "Enabling services"
-sudo systemctl enable bluetooth.service
-sudo systemctl enable sddm
-sudo systemctl enable firewalld.service # https://wiki.archlinux.org/title/Firewalld
-sudo systemctl enable fail2ban.service # https://wiki.archlinux.org/title/Fail2ban
+sudo systemctl enable bluetooth.service >/dev/null
+sudo systemctl enable sddm >/dev/null
+sudo systemctl enable firewalld.service >/dev/null # https://wiki.archlinux.org/title/Firewalld
+sudo systemctl enable fail2ban.service >/dev/null # https://wiki.archlinux.org/title/Fail2ban
 
 # Creating the Hyprland wayland session
-sudo mkdir -p /usr/share/wayland-sessions
+sudo mkdir -p /usr/share/wayland-sessions >/dev/null
 echo -e "[Desktop Entry]\nName=Hyprland\nComment=An intelligent dynamic tiling Wayland compositor\nExec=Hyprland\nType=Application" | sudo tee -a /usr/share/wayland-sessions/hyprland.conf >/dev/null
 
 # NFS shares
@@ -282,8 +282,8 @@ source ~/.bashrc
 
 # Installing informant last because it is destroying my autoinstall script.
 input_print "Installing the package - Informant."
-yay -Syu --noconfirm informant
-sudo gpasswd -a $USER informant
+yay -Syu --noconfirm informant >/dev/null
+sudo gpasswd -a $USER informant >/dev/null
 
 # Removing install files and reboot the system
 input_print "REBOOTING THE SYSTEM!"
