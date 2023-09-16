@@ -65,6 +65,7 @@ git clone https://aur.archlinux.org/yay.git >/dev/null
 cd yay && makepkg -si --noconfirm >/dev/null
 cd .. && rm -rf yay >/dev/null
 yay -R --noconfirm xdg-desktop-portal-gnome xdg-desktop-portal-gtk >/dev/null
+yay -Syu --noconfirm
 
 # Adding the current user to the input group (function)
 info_print "Adding the $USER to the input group"
