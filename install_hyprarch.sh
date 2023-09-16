@@ -73,18 +73,18 @@ sudo gpasswd -a $USER input >/dev/null
 
 # Installing systempackages (function)
 info_print "Installing system packages!"
-yay -Syu --noconfirm sddm nfs-utils qt5-wayland qt5ct waybar-hyprland wofi xdg-desktop-portal-hyprland
-yay -Syu --noconfirm qt6-wayland qt6ct qt5-svg qt5-quickcontrols2 qt5-graphicaleffects gtk3 polkit-gnome
-yay -Syu --noconfirm pipewire pipewire-pulse pipewire-jack jq network-manager-sstp
-yay -Syu --noconfirm sstp-client github-cli github-desktop-bin wl-clipboard cliphist timeshift wat-git
-yay -Syu --noconfirm rmlint rebuild-detector downgrade p7zip unrar rar zip unzip network-manager-applet
-yay -Syu --noconfirm blueman grim slurp pkgfile swappy linux-headers firewalld
-yay -Syu --noconfirm fail2ban swaybg ttf-jetbrains-mono-nerd papirus-icon-theme ttf-ms-fonts
+yay -Syu --noconfirm sddm nfs-utils qt5-wayland qt5ct waybar-hyprland wofi xdg-desktop-portal-hyprland >/dev/null
+yay -Syu --noconfirm qt6-wayland qt6ct qt5-svg qt5-quickcontrols2 qt5-graphicaleffects gtk3 polkit-gnome >/dev/null
+yay -Syu --noconfirm pipewire pipewire-pulse pipewire-jack jq network-manager-sstp >/dev/null
+yay -Syu --noconfirm sstp-client github-cli github-desktop-bin wl-clipboard cliphist timeshift wat-git >/dev/null
+yay -Syu --noconfirm rmlint rebuild-detector downgrade p7zip unrar rar zip unzip network-manager-applet >/dev/null
+yay -Syu --noconfirm blueman grim slurp pkgfile swappy linux-headers firewalld >/dev/null
+yay -Syu --noconfirm fail2ban swaybg ttf-jetbrains-mono-nerd papirus-icon-theme ttf-ms-fonts >/dev/null
 info_print "Yep! Replace it!"
 yay -Syu wireplumber
 
 info_print "Installing Gaming-related packages!"
-yay -Syu gamescope discord gamemode mangohud lutris wine-staging protonup-qt vulkan-tools xone-dkms piper
+yay -Syu --noconfirm gamescope discord gamemode mangohud lutris wine-staging protonup-qt vulkan-tools xone-dkms piper >/dev/null
 
 info_print "Please select the correct VULKAN-DRIVER for your GPU. DO NOT JUST RANDOMLY PRESS ENTER!"
 sudo pacman -Syu steam
@@ -92,7 +92,7 @@ sudo pacman -Syu steam
 # Check if NVIDIA GPU is found
 if lspci -k | grep -A 2 -E "(VGA|3D)" | grep -iq nvidia; then
 info_print "NVIDIA GPU FOUND! Installing nvidia-related packages!"  
-   yay -Syu --noconfirm --needed nvidia-dkms libva libva-nvidia-driver hyprland-nvidia >/dev/null
+yay -Syu --noconfirm nvidia-dkms libva libva-nvidia-driver hyprland-nvidia >/dev/null
 
 info_print "Creating modprobe config for your Nvidia card for max performance and wayland support" 
    sudo mkdir -p /etc/modprobe.d >/dev/null
