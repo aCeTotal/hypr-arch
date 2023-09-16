@@ -74,7 +74,9 @@ sudo gpasswd -a $USER input
 info_print "Installing system packages!"
 yay -Syu --noconfirm sddm nfs-utils qt5-wayland qt5ct waybar-hyprland wofi xdg-desktop-portal-hyprland 
 yay -Syu --noconfirm qt6-wayland qt6ct qt5-svg qt5-quickcontrols2 qt5-graphicaleffects gtk3 polkit-gnome 
-yay -Syu --noconfirm pipewire pipewire-pulse pipewire-jack wireplumber jq network-manager-sstp 
+yay -Syu --noconfirm pipewire pipewire-pulse pipewire-jack jq network-manager-sstp 
+yay -R pipewire-media-session
+yay -Syu --noconfirm wireplumber
 yay -Syu --noconfirm sstp-client github-cli github-desktop-bin wl-clipboard cliphist timeshift wat-git 
 yay -Syu --noconfirm rmlint rebuild-detector downgrade p7zip unrar rar zip unzip network-manager-applet 
 yay -Syu --noconfirm blueman grim slurp pkgfile swappy linux-headers firewalld 
