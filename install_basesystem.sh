@@ -254,7 +254,7 @@ microcode_detector
 
 # Pacstrap (setting up a base sytem onto the new root).
 info_print "Installing the base system (it may take a while)."
-pacstrap -K /mnt wpa_supplicant base base-devel linux-zen "$microcode" linux-firmware linux-zen-headers git vim btrfs-progs xdg-user-dirs grub grub-btrfs rsync efibootmgr snapper reflector snap-pac zram-generator sudo &>/dev/null
+pacstrap -K /mnt iwd base base-devel linux-zen "$microcode" linux-firmware linux-zen-headers git vim btrfs-progs xdg-user-dirs grub grub-btrfs rsync efibootmgr snapper reflector snap-pac zram-generator sudo &>/dev/null
 
 # Setting up the hostname.
 echo "$hostname" > /mnt/etc/hostname
