@@ -72,7 +72,13 @@ sudo gpasswd -a $USER input
 
 # Installing systempackages (function)
 info_print "Installing system packages!"
-yay -Syu --noconfirm --needed sddm nfs-utils qt5-wayland qt5ct waybar-hyprland wofi xdg-desktop-portal-hyprland qt6-wayland qt6ct qt5-svg qt5-quickcontrols2 qt5-graphicaleffects gtk3 polkit-gnome pipewire pipewire-pulse pipewire-jack wireplumber jq network-manager-sstp sstp-client github-cli github-desktop-bin wl-clipboard cliphist timeshift wat-git rmlint rebuild-detector downgrade p7zip unrar rar zip unzip network-manager-applet blueman grim slurp pkgfile swappy linux-headers firewalld fail2ban swaybg ttf-jetbrains-mono-nerd papirus-icon-theme ttf-ms-fonts
+yay -Syu --noconfirm sddm nfs-utils qt5-wayland qt5ct waybar-hyprland wofi xdg-desktop-portal-hyprland 
+yay -Syu --noconfirm qt6-wayland qt6ct qt5-svg qt5-quickcontrols2 qt5-graphicaleffects gtk3 polkit-gnome 
+yay -Syu --noconfirm pipewire pipewire-pulse pipewire-jack wireplumber jq network-manager-sstp 
+yay -Syu --noconfirm sstp-client github-cli github-desktop-bin wl-clipboard cliphist timeshift wat-git 
+yay -Syu --noconfirm rmlint rebuild-detector downgrade p7zip unrar rar zip unzip network-manager-applet 
+yay -Syu --noconfirm blueman grim slurp pkgfile swappy linux-headers firewalld 
+yay -Syu --noconfitm fail2ban swaybg ttf-jetbrains-mono-nerd papirus-icon-theme ttf-ms-fonts
 
 info_print "Installing Gaming-related packages!"
 yay -Syu --noconfirm --needed gamescope discord gamemode mangohud lutris wine-staging protonup-qt vulkan-tools xone-dkms piper
