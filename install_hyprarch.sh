@@ -73,16 +73,13 @@ sudo gpasswd -a $USER input >/dev/null
 
 # Installing systempackages (function)
 info_print "Installing system packages!"
-yay -Syu --noconfirm sddm nfs-utils qt5-wayland qt5ct waybar-hyprland wofi xdg-desktop-portal-hyprland >/dev/null
-yay -Syu --noconfirm qt6-wayland qt6ct qt5-svg qt5-quickcontrols2 qt5-graphicaleffects gtk3 polkit-gnome >/dev/null
-yay -Syu --noconfirm pipewire pipewire-pulse pipewire-jack jq network-manager-sstp >/dev/null
-yay -Syu --noconfirm sstp-client github-cli github-desktop-bin wl-clipboard cliphist timeshift wat-git >/dev/null
-yay -Syu --noconfirm rmlint rebuild-detector downgrade p7zip unrar rar zip unzip network-manager-applet >/dev/null
-yay -Syu --noconfirm blueman grim slurp pkgfile swappy linux-headers firewalld >/dev/null
-yay -Syu --noconfirm fail2ban swaybg ttf-jetbrains-mono-nerd papirus-icon-theme ttf-ms-fonts wireplumber >/dev/null
+sudo pacman -Syu sddm nfs-utils qt5-wayland qt5ct wofi xdg-desktop-portal-hyprland qt6-wayland qt6ct qt5-svg qt5-quickcontrols2 qt5-graphicaleffects gtk3 polkit-gnome pipewire pipewire-pulse pipewire-jack jq network-manager-sstp sstp-client 
+sudo pacman -Syu github-cli wl-clipboard cliphist timeshift fail2ban swaybg ttf-jetbrains-mono-nerd papirus-icon-theme wireplumber blueman grim slurp pkgfile swappy linux-headers firewalld rmlint rebuild-detector p7zip unrar rar zip unzip network-manager-applet
+yay -Syu --noconfirm github-desktop-bin waybar-hyprland wat-git downgrade
 
 info_print "Installing Gaming-related packages!"
-yay -Syu --noconfirm gamescope discord gamemode mangohud lutris wine-staging protonup-qt vulkan-tools xone-dkms piper >/dev/null
+sudo pacman -Syu piper vulkan-tools wine-staging gamescope discord gamemode mangohud lutris
+yay -Syu --noconfirm protonup-qt xone-dkms
 
 info_print "Please select the correct VULKAN-DRIVER for your GPU. DO NOT JUST RANDOMLY PRESS ENTER!"
 sudo pacman -Syu steam
