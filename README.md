@@ -1,4 +1,4 @@
-How to install hypr-arch (Arch Linux with Hyprland): WARNING: WORK-IN-PROGRESS!
+How to install hypr-arch (Arch Linux (BTRFS) with Hyprland): WARNING: WORK-IN-PROGRESS!
 
 1. Download the latest image of Arch Linux and place it on a usb-stick with Ventoy or similar.
 
