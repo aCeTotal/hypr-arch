@@ -1,6 +1,6 @@
 How to install hypr-arch (Arch Linux with Hyprland): WARNING: WORK-IN-PROGRESS!
 
-1. Download the latest image of Arch Linux and place it on a memory stick with Ventoy or similar.
+1. Download the latest image of Arch Linux and place it on a usb-stick with Ventoy or similar.
 
 2. Make sure your BIOS is set to only use UEFI and Secure Boot disabled.
 
