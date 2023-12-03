@@ -93,7 +93,7 @@ sudo pacman -Syu kodi retroarch retroarch-assets-xmb
 # Check if NVIDIA GPU is found
 if lspci -k | grep -A 2 -E "(VGA|3D)" | grep -iq nvidia; then
 info_print "NVIDIA GPU FOUND! Installing nvidia-related packages!"  
-yay -Syu --noconfirm --needed nvidia-dkms libva libva-nvidia-driver hyprland-nvidia nvidia-utils lib32-nvidia-utils >/dev/null
+yay -Syu --noconfirm --needed nvidia-dkms libva libva-nvidia-driver hyprland nvidia-utils lib32-nvidia-utils >/dev/null
 sudo pacman -Syu steam
 
 info_print "Creating modprobe config for your Nvidia card for max performance and wayland support" 
