@@ -65,7 +65,6 @@ git clone https://aur.archlinux.org/yay.git >/dev/null
 cd yay && makepkg -si --noconfirm >/dev/null
 cd .. && rm -rf yay >/dev/null
 yay -R --noconfirm xdg-desktop-portal-gnome xdg-desktop-portal-gtk >/dev/null
-yay -Syu --noconfirm
 
 # Adding the current user to the input group (function)
 info_print "Adding the $USER to the input group"
@@ -73,22 +72,21 @@ sudo gpasswd -a $USER input >/dev/null
 
 # Installing systempackages (function)
 info_print "Installing system packages!"
-sudo pacman -Syu --needed sddm nfs-utils qt5-wayland qt5ct wofi xdg-desktop-portal-hyprland qt6-wayland qt6ct qt5-svg qt5-quickcontrols2 qt5-graphicaleffects gtk3 polkit-gnome pipewire pipewire-pulse pipewire-jack jq network-manager-sstp sstp-client 
-sudo pacman -Syu --needed swaybg github-cli wl-clipboard cliphist timeshift fail2ban swaybg ttf-jetbrains-mono-nerd papirus-icon-theme thunar
-sudo pacman -Syu --needed wireplumber blueman grim slurp pkgfile swappy linux-headers firewalld rmlint rebuild-detector p7zip unrar rar zip unzip network-manager-applet
+sudo pacman -Syu --noconfirm sddm nfs-utils qt5-wayland qt5ct wofi xdg-desktop-portal-hyprland qt6-wayland qt6ct qt5-svg qt5-quickcontrols2 qt5-graphicaleffects gtk3 polkit-gnome pipewire pipewire-pulse pipewire-jack jq network-manager-sstp sstp-client 
+sudo pacman -Syu --noconfirm swaybg github-cli wl-clipboard cliphist timeshift fail2ban swaybg ttf-jetbrains-mono-nerd papirus-icon-theme thunar
+sudo pacman -Syu --noconfirm wireplumber grim slurp pkgfile swappy linux-headers firewalld rmlint rebuild-detector p7zip unrar rar zip unzip
+sudo pacman -Syu --noconfirm network-manager-applet pavucontrol
 yay -Syu --noconfirm github-desktop-bin waybar-hyprland downgrade thorium-browser-bin bibata-cursor-theme wdisplays
 
 info_print "Installing Gaming-related packages!"
 sudo pacman -Syu piper vulkan-tools wine-staging gamescope discord gamemode mangohud lutris
 yay -Syu --noconfirm xone-dkms
 
-info_print "Please select the correct VULKAN-DRIVER for your GPU. DO NOT JUST RANDOMLY PRESS ENTER!"
-sudo pacman -Syu steam
-
 # Check if NVIDIA GPU is found
 if lspci -k | grep -A 2 -E "(VGA|3D)" | grep -iq nvidia; then
 info_print "NVIDIA GPU FOUND! Installing nvidia-related packages!"  
-yay -Syu --noconfirm nvidia-dkms libva libva-nvidia-driver hyprland-nvidia >/dev/null
+yay -Syu --noconfirm --needed nvidia-dkms libva libva-nvidia-driver hyprland-nvidia nvidia-utils lib32-nvidia-utils >/dev/null
+sudo pacman -Syu steam
 
 info_print "Creating modprobe config for your Nvidia card for max performance and wayland support" 
    sudo mkdir -p /etc/modprobe.d >/dev/null
@@ -130,6 +128,7 @@ TXT
 
 else
    yay -Syu --noconfirm hyprland
+   sudo pacman -Syu steam
 
    echo -e "\nMODULES=(btrfs)" | sudo tee -a /etc/mkinitcpio.conf >/dev/null
    sudo sed -i 's/GRUB_TIMEOUT=5/GRUB_TIMEOUT=1/g' /etc/default/grub 
