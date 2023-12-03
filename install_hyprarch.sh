@@ -73,13 +73,14 @@ sudo gpasswd -a $USER input >/dev/null
 
 # Installing systempackages (function)
 info_print "Installing system packages!"
-sudo pacman -Syu sddm nfs-utils qt5-wayland qt5ct wofi xdg-desktop-portal-hyprland qt6-wayland qt6ct qt5-svg qt5-quickcontrols2 qt5-graphicaleffects gtk3 polkit-gnome pipewire pipewire-pulse pipewire-jack jq network-manager-sstp sstp-client 
-sudo pacman -Syu github-cli wl-clipboard cliphist timeshift fail2ban swaybg ttf-jetbrains-mono-nerd papirus-icon-theme wireplumber blueman grim slurp pkgfile swappy linux-headers firewalld rmlint rebuild-detector p7zip unrar rar zip unzip network-manager-applet
-yay -Syu --noconfirm github-desktop-bin waybar-hyprland wat-git downgrade
+sudo pacman -Syu --needed sddm nfs-utils qt5-wayland qt5ct wofi xdg-desktop-portal-hyprland qt6-wayland qt6ct qt5-svg qt5-quickcontrols2 qt5-graphicaleffects gtk3 polkit-gnome pipewire pipewire-pulse pipewire-jack jq network-manager-sstp sstp-client 
+sudo pacman -Syu --needed swaybg github-cli wl-clipboard cliphist timeshift fail2ban swaybg ttf-jetbrains-mono-nerd papirus-icon-theme 
+sudo pacman -Syu --needed wireplumber blueman grim slurp pkgfile swappy linux-headers firewalld rmlint rebuild-detector p7zip unrar rar zip unzip network-manager-applet
+yay -Syu --noconfirm github-desktop-bin waybar-hyprland downgrade
 
 info_print "Installing Gaming-related packages!"
 sudo pacman -Syu piper vulkan-tools wine-staging gamescope discord gamemode mangohud lutris
-yay -Syu --noconfirm protonup-qt xone-dkms
+yay -Syu --noconfirm xone-dkms
 
 info_print "Please select the correct VULKAN-DRIVER for your GPU. DO NOT JUST RANDOMLY PRESS ENTER!"
 sudo pacman -Syu steam
@@ -136,7 +137,7 @@ else
 fi
 
 info_print "Installing some nice packages"
-yay -Syu --noconfirm --needed alacritty opera rider blender gimp libreoffice-still dropbox spotify ventoy-bin
+yay -Syu --noconfirm --needed alacritty rider blender gimp libreoffice-still dropbox spotify ventoy-bin
 
 # Citrix Workspace.
 input_print "Do you want to install the Citrix Workspace client? [y/N]?: "
@@ -243,8 +244,8 @@ TXT
 
 # Adding some aliases
 input_print "Adding some aliases, like update (Safely updates the system) or install <package>"
-rm ~/.bashrc && touch ~/.bashrc
-~/.bashrc > /dev/null <<'TXT'
+rm /home/$username/.bashrc && touch /home/$username/.bashrc
+/home/$username/.bashrc > /dev/null <<'TXT'
  #
  # ~/.bashrc
  #
