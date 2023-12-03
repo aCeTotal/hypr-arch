@@ -372,7 +372,7 @@ done
 info_print "Almost done!"
 info_print "1. Type reboot and hit enter to reboot the system."
 info_print "2. Log in with your user and password."
-info_print "3. bash <(curl -sL bit.ly/install_hyprarch)
-info_print "4. Reboot.
+info_print "3. bash <(curl -sL bit.ly/install_hyprarch)"
+info_print "4. Reboot."
 info_print "GOOD LUCK! :)"
 exit
