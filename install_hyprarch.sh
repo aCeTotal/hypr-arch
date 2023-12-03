@@ -76,7 +76,7 @@ info_print "Installing system packages!"
 sudo pacman -Syu --needed sddm nfs-utils qt5-wayland qt5ct wofi xdg-desktop-portal-hyprland qt6-wayland qt6ct qt5-svg qt5-quickcontrols2 qt5-graphicaleffects gtk3 polkit-gnome pipewire pipewire-pulse pipewire-jack jq network-manager-sstp sstp-client 
 sudo pacman -Syu --needed swaybg github-cli wl-clipboard cliphist timeshift fail2ban swaybg ttf-jetbrains-mono-nerd papirus-icon-theme 
 sudo pacman -Syu --needed wireplumber blueman grim slurp pkgfile swappy linux-headers firewalld rmlint rebuild-detector p7zip unrar rar zip unzip network-manager-applet
-yay -Syu --noconfirm github-desktop-bin waybar-hyprland downgrade
+yay -Syu --noconfirm github-desktop-bin waybar-hyprland downgrade thorium-browser-bin bibata-cursor-theme
 
 info_print "Installing Gaming-related packages!"
 sudo pacman -Syu piper vulkan-tools wine-staging gamescope discord gamemode mangohud lutris
