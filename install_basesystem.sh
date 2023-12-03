@@ -372,7 +372,7 @@ done
 info_print "Almost done!"
 info_print "1. Type reboot and hit enter to reboot the system."
 info_print "2. Log in with your user and password."
-info_print "3. Download the hypr-arch git repo (git clone https://github.com/aCeTotal/hypr-arch.git)."
-info_print "4. cd hypr-arch and ./install_hyprland.sh (You may first need to: sudo chmod +x install_hyprland.sh)"
+info_print "3. bash <(curl -sL bit.ly/install_hyprarch)
+info_print "4. Reboot.
 info_print "GOOD LUCK! :)"
 exit
