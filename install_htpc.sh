@@ -72,15 +72,23 @@ sudo gpasswd -a $USER input >/dev/null
 
 # Installing systempackages (function)
 info_print "Installing system packages!"
-sudo pacman -Syu --noconfirm sddm nfs-utils qt5-wayland qt5ct wofi xdg-desktop-portal-hyprland qt6-wayland qt6ct qt5-svg qt5-quickcontrols2 qt5-graphicaleffects gtk3 polkit-gnome pipewire pipewire-pulse pipewire-jack jq network-manager-sstp sstp-client 
-sudo pacman -Syu --noconfirm swaybg github-cli wl-clipboard cliphist timeshift fail2ban swaybg ttf-jetbrains-mono-nerd papirus-icon-theme thunar
-sudo pacman -Syu --noconfirm wireplumber grim slurp pkgfile swappy linux-headers firewalld rmlint rebuild-detector p7zip unrar rar zip unzip
-sudo pacman -Syu --noconfirm network-manager-applet pavucontrol
-yay -Syu --noconfirm github-desktop-bin waybar-hyprland downgrade thorium-browser-bin bibata-cursor-theme wdisplays
+sudo pacman -Syu --noconfirm sddm nfs-utils qt5-wayland qt5ct wofi xdg-desktop-portal-hyprland qt6-wayland qt6ct qt5-svg qt5-quickcontrols2 qt5-graphicaleffects gtk3 polkit-gnome pipewire pipewire-pulse pipewire-jack jq
+sudo pacman -Syu --noconfirm swaybg thunar
+sudo pacman -Syu --noconfirm wireplumber pkgfile linux-headers rmlint rebuild-detector p7zip unrar zip unzip
+sudo pacman -Syu --noconfirm pavucontrol
+yay -Syu --noconfirm downgrade thorium-browser-bin bibata-cursor-theme wdisplays
 
 info_print "Installing Gaming-related packages!"
-sudo pacman -Syu piper vulkan-tools wine-staging gamescope discord gamemode mangohud lutris
-yay -Syu --noconfirm xone-dkms
+sudo pacman -Syu piper vulkan-tools wine-staging gamescope gamemode mangohud lutris
+
+info_print "Installing the Xbox Controller & Dongle support"
+git clone https://github.com/medusalix/xone
+cd xone && sudo ./install.sh --release
+sudo xone-get-firmware.sh
+
+info_print "Installing Kodi $ Retroarch"
+sudo pacman -Syu kodi retroarch retroarch-assets-xmb
+
 
 # Check if NVIDIA GPU is found
 if lspci -k | grep -A 2 -E "(VGA|3D)" | grep -iq nvidia; then
@@ -136,41 +144,7 @@ else
 fi
 
 info_print "Installing some nice packages"
-yay -Syu --noconfirm --needed alacritty rider blender gimp libreoffice-still dropbox spotify ventoy-bin
-
-# Citrix Workspace.
-input_print "Do you want to install the Citrix Workspace client? [y/N]?: "
-read -r citrix_response
-if [[ "${citrix_response,,}" =~ ^(yes|y)$ ]]; then
-info_print "Installing the Citrix Workspace client"
-yay -Syu icaclient --noconfirm >/dev/null
-mkdir -p ~/.ICACLIENT/cache/ >/dev/null
-
-sudo sed -i 's/TWIMode=*/TWIMode=0/g' /opt/Citrix/ICAClient/config/All_Regions.ini 
-sudo sed -i 's/DesiredColor=*/DesiredColor=8/g' /opt/Citrix/ICAClient/config/All_Regions.ini
-sudo sed -i 's/DesiredHRES=*/DesiredHRES=1024/g' /opt/Citrix/ICAClient/config/All_Regions.ini
-sudo sed -i 's/DesiredVRES=*/DesiredVRES=768/g' /opt/Citrix/ICAClient/config/All_Regions.ini  
-sudo sed -i 's/UseFullScreen=*/UseFullScreen=false/g' /opt/Citrix/ICAClient/config/All_Regions.ini  
-sudo sed -i 's/TWIFullScreenMode=*/TWIFullScreenMode=false/g' /opt/Citrix/ICAClient/config/All_Regions.ini  
-sudo sed -i 's/NoWindowManager=*/NoWindowManager=false/g' /opt/Citrix/ICAClient/config/All_Regions.ini
-
-sudo mkdir -p /usr/share/applications/
-sudo touch /usr/share/applications/wfica.desktop
-sudo tee /usr/share/applications/wfica.desktop > /dev/null <<'TXT'
-[Desktop Entry]
-Name=Citrix ICA client
-Comment="Launch Citrix applications from .ica files"
-Categories=Network;
-Exec=/opt/Citrix/ICAClient/wfica
-Terminal=false
-Type=Application
-NoDisplay=true
-MimeType=application/x-ica;
-
-TXT
-else
-   input_print "Continuing the installation of Hypr-Arch!"
-fi
+yay -Syu --noconfirm --needed alacritty spotify
 
 # Adding theme for SDDM
 input_print "Installing the SDDM Theme - Deepin"
@@ -185,8 +159,6 @@ sudo sed -i "s/^Current=/Current=deepin/g" /etc/sddm.conf.d/default.conf
 input_print "Enabling services"
 sudo systemctl enable bluetooth.service >/dev/null
 sudo systemctl enable sddm >/dev/null
-sudo systemctl enable firewalld.service >/dev/null # https://wiki.archlinux.org/title/Firewalld
-sudo systemctl enable fail2ban.service >/dev/null # https://wiki.archlinux.org/title/Fail2ban
 
 # Creating the Hyprland wayland session
 sudo mkdir -p /usr/share/wayland-sessions >/dev/null
