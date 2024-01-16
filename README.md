@@ -29,3 +29,5 @@ SUPER + [1-9] = Change workspace
 9. Update the system + packages with the command 'update' and install new packages with the command 'install <package>'. (Just a tip and an attempt to make Arch Linux a bit more stable for people who don't update every week.).
 
 10. Good luck! :)
+
+Psst. I have a bug in the script somewhere, so alias and screenshot does not work out of the box.
