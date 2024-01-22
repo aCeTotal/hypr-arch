@@ -77,6 +77,7 @@ sudo pacman -Syu --noconfirm swaybg github-cli wl-clipboard cliphist timeshift f
 sudo pacman -Syu --noconfirm wireplumber grim slurp pkgfile swappy linux-headers firewalld rmlint rebuild-detector p7zip unrar rar zip unzip
 sudo pacman -Syu --noconfirm network-manager-applet pavucontrol freecad
 yay -Syu --noconfirm openocd stm32cubemx
+yay -Syu --noconfirm teams
 yay -Syu --noconfirm github-desktop-bin waybar downgrade thorium-browser-bin bibata-cursor-theme wdisplays
 
 info_print "Installing Gaming-related packages!"
