@@ -76,7 +76,7 @@ sudo pacman -Syu --noconfirm sddm nfs-utils qt5-wayland qt5ct wofi xdg-desktop-p
 sudo pacman -Syu --noconfirm swaybg github-cli wl-clipboard cliphist timeshift fail2ban swaybg ttf-jetbrains-mono-nerd papirus-icon-theme thunar
 sudo pacman -Syu --noconfirm wireplumber grim slurp pkgfile swappy linux-headers firewalld rmlint rebuild-detector p7zip unrar rar zip unzip
 sudo pacman -Syu --noconfirm network-manager-applet pavucontrol freecad
-sudo pacman -Syu --noconfirm grim slurp
+sudo pacman -Syu --noconfirm grim slurp swappy
 yay -Syu --noconfirm openocd stm32cubemx
 yay -Syu --noconfirm teams debtap
 yay -Syu --noconfirm github-desktop-bin waybar downgrade thorium-browser-bin bibata-cursor-theme wdisplays
