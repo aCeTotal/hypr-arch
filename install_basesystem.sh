@@ -244,6 +244,7 @@ for subvol in "${subvols[@]:2}"; do
     mount -o "$mountopts",subvol=@"$subvol" "$BTRFS" /mnt/"${subvol//_//}"
 done
 chmod 750 /mnt/root
+chmod 0700 /mnt/boot
 mount -o "$mountopts",subvol=@snapshots "$BTRFS" /mnt/.snapshots
 mount -o "$mountopts",subvol=@var_pkgs "$BTRFS" /mnt/var/cache/pacman/pkg
 chattr +C /mnt/var/log
@@ -317,7 +318,8 @@ arch-chroot /mnt /bin/bash -e <<EOF
 
     # Setting up systemd-boot.
     bootctl --path=/boot install
-    chmod 755 /boot
+    chmod 0700 /boot
+    chmod 0700 /boot/*
 
 
     # Configure systemd-boot loader entries.
