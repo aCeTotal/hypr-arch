@@ -317,6 +317,8 @@ arch-chroot /mnt /bin/bash -e <<EOF
 
     # Setting up systemd-boot.
     bootctl --path=/boot install
+    chmod 755 /boot
+
 
     # Configure systemd-boot loader entries.
     cat <<EOF > /boot/loader/entries/arch.conf
