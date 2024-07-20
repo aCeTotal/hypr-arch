@@ -1,10 +1,15 @@
+#!/usr/bin/env -S bash -e
 
-#!/usr/bin/env bash
+# Fixing annoying issue that breaks GitHub Actions
+# shellcheck disable=SC2001
+
+# Cleaning the TTY.
+clear
 
 # Cosmetics (colours for text).
 BOLD='\e[1m'
 BRED='\e[91m'
-BBLUE='\e[34m'
+BBLUE='\e[34m'  
 BGREEN='\e[92m'
 BYELLOW='\e[93m'
 RESET='\e[0m'
@@ -16,7 +21,7 @@ info_print () {
 
 # Pretty print for input (function).
 input_print () {
-    echo -ne "${BOLD}${BYELLOW}[ ${GREEN}•${BYELLOW} ] $1${RESET}"
+    echo -ne "${BOLD}${BYELLOW}[ ${BGREEN}•${BYELLOW} ] $1${RESET}"
 }
 
 # Alert user of bad input (function).
@@ -66,28 +71,12 @@ userpass_selector () {
         return 1
     fi
     echo
-    input_print "Please enter the password again (you're not going to see it): "
+    input_print "Please enter the password again (you're not going to see it): " 
     read -r -s userpass2
     echo
     if [[ "$userpass" != "$userpass2" ]]; then
         echo
         error_print "Passwords don't match, please try again."
-        return 1
-    fi
-    return 0
-}
-
-# Ask user which post-install script to run (function).
-postinstall_selector () {
-    echo
-    input_print "Which configuration do you want to install? (1 = desktop, 2 = htpc): "
-    read -r postinstall_choice
-    if [[ "$postinstall_choice" == "1" ]]; then
-        postinstall_script="bash <(curl -sL bit.ly/install_hyprarch)"
-    elif [[ "$postinstall_choice" == "2" ]]; then
-        postinstall_script="bash <(curl -sL bit.ly/install_hyprhtpc)"
-    else
-        error_print "Invalid choice, please enter 1 or 2."
         return 1
     fi
     return 0
@@ -156,21 +145,6 @@ keyboard_selector () {
     esac
 }
 
-# List available disks and let the user select one.
-disk_selector () {
-    echo
-    info_print "Listing available disks:"
-    lsblk -d -o NAME,SIZE,MODEL | grep -v 'loop'
-    echo
-    input_print "Enter the disk to install the system on (e.g., /dev/sda): "
-    read -r DISK
-    if [[ ! -b "$DISK" ]]; then
-        error_print "$DISK is not a valid disk."
-        return 1
-    fi
-    return 0
-}
-
 # Welcome screen.
 echo -ne "${BOLD}${BYELLOW}
 ======================================================================
@@ -186,144 +160,219 @@ echo -ne "${BOLD}${BYELLOW}
 ${RESET}"
 info_print "Welcome to the first part of installing Hypr-Arch!"
 
-# Selecting and checking disk.
-while ! disk_selector; do :; done
+# Setting up keyboard layout.
+until keyboard_selector; do : ; done
 
-# Selecting and checking password.
-while ! lukspass_selector; do :; done
+# Choosing the target for the installation.
+info_print "Available disks for the installation:"
+lsblk
+PS3="Please select the number of the corresponding disk (e.g. 1): "
+select ENTRY in $(lsblk -dpnoNAME|grep -P "/dev/sd|nvme|vd");
+do
+    DISK="$ENTRY"
+    info_print "Arch Linux will be installed on the following disk: $DISK"
+    break
+done
 
-# Selecting and checking hostname.
-while ! hostname_selector; do :; done
+# Setting up LUKS password.
+until lukspass_selector; do : ; done
 
-# Selecting and checking locale.
-while ! locale_selector; do :; done
+# User choses the locale.
+until locale_selector; do : ; done
 
-# Selecting and checking keyboard layout.
-while ! keyboard_selector; do :; done
+# User choses the hostname.
+until hostname_selector; do : ; done
 
-# Detecting microcode.
+# User sets up the user/root passwords.
+until userpass_selector; do : ; done
+
+# Warn user about deletion of old partition scheme.
+input_print "WARNING! This will wipe the current partition table on $DISK once installation starts. Do you agree [y/N]?: "
+read -r disk_response
+if ! [[ "${disk_response,,}" =~ ^(yes|y)$ ]]; then
+    error_print "Quitting."
+    exit
+fi
+info_print "Wiping $DISK."
+wipefs -af "$DISK" &>/dev/null
+sgdisk -Zo "$DISK" &>/dev/null
+
+# Creating a new partition scheme.
+info_print "Creating the partitions on $DISK."
+parted -s "$DISK" \
+    mklabel gpt \
+    mkpart ESP fat32 1MiB 513MiB \
+    set 1 esp on \
+    mkpart CRYPTROOT 513MiB 100% \
+
+ESP="/dev/disk/by-partlabel/ESP"
+CRYPTROOT="/dev/disk/by-partlabel/CRYPTROOT"
+
+# Informing the Kernel of the changes.
+info_print "Informing the Kernel about the disk changes."
+partprobe "$DISK"
+
+# Formatting the ESP as FAT32.
+info_print "Formatting the EFI Partition as FAT32."
+mkfs.fat -F 32 "$ESP" &>/dev/null
+
+# Creating a LUKS Container for the root partition.
+info_print "Creating LUKS Container for the root partition."
+echo -n "$password" | cryptsetup luksFormat "$CRYPTROOT" -d - &>/dev/null
+echo -n "$password" | cryptsetup open "$CRYPTROOT" cryptroot -d - 
+BTRFS="/dev/mapper/cryptroot"
+
+# Formatting the LUKS Container as BTRFS.
+info_print "Formatting the LUKS container as BTRFS."
+mkfs.btrfs "$BTRFS" &>/dev/null
+mount "$BTRFS" /mnt
+
+# Creating BTRFS subvolumes.
+info_print "Creating BTRFS subvolumes."
+subvols=(snapshots var_pkgs var_log home root srv)
+for subvol in '' "${subvols[@]}"; do
+    btrfs su cr /mnt/@"$subvol" &>/dev/null
+done
+
+# Mounting the newly created subvolumes.
+umount /mnt
+info_print "Mounting the newly created subvolumes."
+mountopts="ssd,noatime,compress-force=zstd:3,discard=async"
+mount -o "$mountopts",subvol=@ "$BTRFS" /mnt
+mkdir -p /mnt/{home,root,srv,.snapshots,var/{log,cache/pacman/pkg},boot}
+for subvol in "${subvols[@]:2}"; do
+    mount -o "$mountopts",subvol=@"$subvol" "$BTRFS" /mnt/"${subvol//_//}"
+done
+chmod 750 /mnt/root
+mount -o "$mountopts",subvol=@snapshots "$BTRFS" /mnt/.snapshots
+mount -o "$mountopts",subvol=@var_pkgs "$BTRFS" /mnt/var/cache/pacman/pkg
+chattr +C /mnt/var/log
+mount "$ESP" /mnt/boot/
+
+# Checking the microcode to install.
 microcode_detector
 
-# Choosing post-install script.
-while ! postinstall_selector; do :; done
-
-# Erase old partition table.
-info_print "Cleaning partition table on $DISK."
-sgdisk -Z "$DISK" >/dev/null
-
-# Creating the partitions.
-info_print "Creating a new partition scheme on $DISK."
-sgdisk -a 2048 -o "$DISK" >/dev/null
-sgdisk -n 1::+550M --typecode=1:ef00 --change-name=1:EFI "$DISK" >/dev/null
-sgdisk -n 2::-0 --typecode=2:8309 --change-name=2:cryptroot "$DISK" >/dev/null
-info_print "Partitions have been created on $DISK."
-EFI_PART="${DISK}1"
-CRYPT_PART="${DISK}2"
-
-# Formatting and setting up partitions.
-info_print "Formatting the EFI partition."
-mkfs.vfat -F32 "$EFI_PART" &>/dev/null
-
-# Setting up the LUKS container.
-info_print "Creating LUKS container on $CRYPT_PART."
-echo -n "$password" | cryptsetup -q luksFormat "$CRYPT_PART" -d - &>/dev/null
-info_print "Opening the LUKS container."
-echo -n "$password" | cryptsetup open "$CRYPT_PART" cryptroot -d - &>/dev/null
-
-# Creating BTRFS filesystem on cryptroot.
-info_print "Creating BTRFS filesystem on /dev/mapper/cryptroot."
-mkfs.btrfs --quiet /dev/mapper/cryptroot &>/dev/null
-info_print "BTRFS filesystem has been created."
-
-# Mounting the new filesystem.
-info_print "Mounting the BTRFS filesystem."
-mount /dev/mapper/cryptroot /mnt
-btrfs subvolume create /mnt/@ &>/dev/null
-btrfs subvolume create /mnt/@home &>/dev/null
-btrfs subvolume create /mnt/@root &>/dev/null
-btrfs subvolume create /mnt/@srv &>/dev/null
-btrfs subvolume create /mnt/@cache &>/dev/null
-btrfs subvolume create /mnt/@log &>/dev/null
-btrfs subvolume create /mnt/@tmp &>/dev/null
-umount /mnt
-
-# Mounting subvolumes.
-info_print "Mounting the BTRFS subvolumes."
-mount -o ssd,noatime,space_cache,compress=zstd,subvol=@ /dev/mapper/cryptroot /mnt
-mkdir -p /mnt/{home,root,srv,var/cache,var/log,var/tmp}
-mount -o ssd,noatime,space_cache,compress=zstd,subvol=@home /dev/mapper/cryptroot /mnt/home
-mount -o ssd,noatime,space_cache,compress=zstd,subvol=@root /dev/mapper/cryptroot /mnt/root
-mount -o ssd,noatime,space_cache,compress=zstd,subvol=@srv /dev/mapper/cryptroot /mnt/srv
-mount -o ssd,noatime,space_cache,compress=zstd,subvol=@cache /dev/mapper/cryptroot /mnt/var/cache
-mount -o ssd,noatime,space_cache,compress=zstd,subvol=@log /dev/mapper/cryptroot /mnt/var/log
-mount -o ssd,noatime,space_cache,compress=zstd,subvol=@tmp /dev/mapper/cryptroot /mnt/var/tmp
-
-# Mounting the EFI partition.
-info_print "Mounting the EFI partition."
-mkdir -p /mnt/boot
-mount "$EFI_PART" /mnt/boot
-
-# Installing the base system and required packages.
-info_print "Installing the base system (this may take a while)."
-pacstrap /mnt base base-devel linux linux-firmware btrfs-progs "$microcode" --noconfirm --quiet
-
-# Generating the fstab.
-info_print "Generating the fstab."
-genfstab -U /mnt >> /mnt/etc/fstab
+# Pacstrap (setting up a base sytem onto the new root).
+info_print "Installing the base system (it may take a while)."
+pacstrap -K /mnt iwd base base-devel linux-zen "$microcode" linux-firmware linux-zen-headers git vim btrfs-progs xdg-user-dirs grub grub-btrfs rsync efibootmgr snapper reflector snap-pac zram-generator sudo &>/dev/null
 
 # Setting up the hostname.
 echo "$hostname" > /mnt/etc/hostname
 
-# Setting up the locale.
-sed -i "s/#$locale/$locale/" /mnt/etc/locale.gen
-echo "LANG=$locale" > /mnt/etc/locale.conf
+# Generating /etc/fstab.
+info_print "Generating a new fstab."
+genfstab -U /mnt >> /mnt/etc/fstab
 
-# Setting up the console keyboard layout.
+# Configure selected locale and console keymap
+sed -i "/^#$locale/s/^#//" /mnt/etc/locale.gen
+echo "LANG=$locale" > /mnt/etc/locale.conf
 echo "KEYMAP=$kblayout" > /mnt/etc/vconsole.conf
 
-# Configuring the initramfs.
-info_print "Configuring the initramfs."
-arch-chroot /mnt mkinitcpio -P
-
-# Setting the root password.
-echo "root:$userpass" | arch-chroot /mnt chpasswd
-
-# Creating the user and setting the password.
-if [[ -n "$username" ]]; then
-    arch-chroot /mnt useradd -m -G wheel -s /bin/bash "$username"
-    echo "$username:$userpass" | arch-chroot /mnt chpasswd
-    sed -i 's/^# %wheel ALL=(ALL:ALL) ALL/%wheel ALL=(ALL:ALL) ALL/' /mnt/etc/sudoers
-fi
-
-# Installing the bootloader (systemd-boot).
-info_print "Installing systemd-boot."
-arch-chroot /mnt bootctl install
-
-# Creating loader configuration.
-cat <<EOF > /mnt/boot/loader/loader.conf
-default arch
-timeout 5
-editor 0
+# Setting hosts file.
+info_print "Setting hosts file."
+cat > /mnt/etc/hosts <<EOF
+127.0.0.1   localhost
+::1         localhost
+127.0.1.1   $hostname.localdomain   $hostname
 EOF
 
-# Creating boot entry for systemd-boot.
-UUID=$(blkid -s UUID -o value "$CRYPT_PART")
-cat <<EOF > /mnt/boot/loader/entries/arch.conf
-title   Arch Linux
-linux   /vmlinuz-linux
-initrd  /intel-ucode.img
-initrd  /amd-ucode.img
-initrd  /initramfs-linux.img
-options cryptdevice=UUID=$UUID:cryptroot root=/dev/mapper/cryptroot rootflags=subvol=@ rw
-EOF
-
-# Installing the chosen networking solution.
+# Setting up the network.
 network_installer
 
-# Finalizing the installation.
-info_print "Finalizing the installation."
+# Configuring /etc/mkinitcpio.conf.
+info_print "Configuring /etc/mkinitcpio.conf."
+cat > /mnt/etc/mkinitcpio.conf <<EOF
+HOOKS=(systemd autodetect keyboard sd-vconsole modconf block sd-encrypt filesystems)
+EOF
 
-# Running the chosen post-install script.
-arch-chroot /mnt $postinstall_script
+# Setting up LUKS2 encryption in grub.
+info_print "Setting up grub config."
+UUID=$(blkid -s UUID -o value $CRYPTROOT)
+sed -i "\,^GRUB_CMDLINE_LINUX=\"\",s,\",&rd.luks.name=$UUID=cryptroot root=$BTRFS," /mnt/etc/default/grub
 
-info_print "Installation complete! You can now reboot into your new system."
+# Configuring the system.
+info_print "Configuring the system (timezone, system clock, initramfs, Snapper, GRUB)."
+arch-chroot /mnt /bin/bash -e <<EOF
+
+    # Setting up timezone.
+    ln -sf /usr/share/zoneinfo/$(curl -s http://ip-api.com/line?fields=timezone) /etc/localtime &>/dev/null
+
+    # Setting up clock.
+    hwclock --systohc
+
+    # Generating locales.
+    locale-gen &>/dev/null
+
+    # Generating a new initramfs.
+    mkinitcpio -P &>/dev/null
+
+    # Snapper configuration.
+    umount /.snapshots
+    rm -r /.snapshots
+    snapper --no-dbus -c root create-config /
+    btrfs subvolume delete /.snapshots &>/dev/null
+    mkdir /.snapshots
+    mount -a &>/dev/null
+    chmod 750 /.snapshots
+
+    # Installing GRUB.
+    grub-install --target=x86_64-efi --efi-directory=/boot/ --bootloader-id=GRUB &>/dev/null
+
+    # Creating grub config file.
+    grub-mkconfig -o /boot/grub/grub.cfg &>/dev/null
+
+EOF
+
+# Setting user password.
+if [[ -n "$username" ]]; then
+    echo "%wheel ALL=(ALL:ALL) ALL" > /mnt/etc/sudoers.d/wheel
+    info_print "Adding the user $username to the system with root privilege."
+    arch-chroot /mnt useradd -m -G wheel -s /bin/bash "$username"
+    info_print "Setting user password for $username."
+    echo "$username:$userpass" | arch-chroot /mnt chpasswd
+fi
+
+# Boot backup hook.
+info_print "Configuring /boot backup when pacman transactions are made."
+mkdir /mnt/etc/pacman.d/hooks
+cat > /mnt/etc/pacman.d/hooks/50-bootbackup.hook <<EOF
+[Trigger]
+Operation = Upgrade
+Operation = Install
+Operation = Remove
+Type = Path
+Target = usr/lib/modules/*/vmlinuz
+
+[Action]
+Depends = rsync
+Description = Backing up /boot...
+When = PostTransaction
+Exec = /usr/bin/rsync -a --delete /boot /.bootbackup
+EOF
+
+# ZRAM configuration.
+info_print "Configuring ZRAM."
+cat > /mnt/etc/systemd/zram-generator.conf <<EOF
+[zram0]
+zram-size = min(ram, 8192)
+EOF
+
+# Pacman eye-candy features.
+info_print "Enabling colours, animations, and parallel downloads for pacman."
+sed -Ei 's/^#(Color)$/\1\nILoveCandy/;s/^#(ParallelDownloads).*/\1 = 10/' /mnt/etc/pacman.conf
+
+# Enabling various services.
+info_print "Enabling Reflector, automatic snapshots, BTRFS scrubbing and systemd-oomd."
+services=(reflector.timer snapper-timeline.timer snapper-cleanup.timer btrfs-scrub@-.timer btrfs-scrub@home.timer btrfs-scrub@var-log.timer btrfs-scrub@\\x2esnapshots.timer grub-btrfs.path systemd-oomd)
+for service in "${services[@]}"; do
+    systemctl enable "$service" --root=/mnt &>/dev/null
+done
+
+# Finishing up.
+info_print "Almost done!"
+info_print "1. Type reboot and hit enter to reboot the system."
+info_print "2. Log in with your user and password."
+info_print "3. bash <(curl -sL bit.ly/install_hyprarch)"
+info_print "4. Reboot."
+info_print "GOOD LUCK! :)"
+exit
