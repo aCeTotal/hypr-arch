@@ -1,13 +1,10 @@
 
-#!/usr/bin/env -S bash -e
-
-# Cleaning the TTY.
-clear
+#!/usr/bin/env bash
 
 # Cosmetics (colours for text).
 BOLD='\e[1m'
 BRED='\e[91m'
-BBLUE='\e[34m'  
+BBLUE='\e[34m'
 BGREEN='\e[92m'
 BYELLOW='\e[93m'
 RESET='\e[0m'
@@ -19,7 +16,7 @@ info_print () {
 
 # Pretty print for input (function).
 input_print () {
-    echo -ne "${BOLD}${BYELLOW}[ ${BGREEN}•${BYELLOW} ] $1${RESET}"
+    echo -ne "${BOLD}${BYELLOW}[ ${GREEN}•${BYELLOW} ] $1${RESET}"
 }
 
 # Alert user of bad input (function).
@@ -69,7 +66,7 @@ userpass_selector () {
         return 1
     fi
     echo
-    input_print "Please enter the password again (you're not going to see it): " 
+    input_print "Please enter the password again (you're not going to see it): "
     read -r -s userpass2
     echo
     if [[ "$userpass" != "$userpass2" ]]; then
@@ -174,43 +171,34 @@ echo -ne "${BOLD}${BYELLOW}
 ${RESET}"
 info_print "Welcome to the first part of installing Hypr-Arch!"
 
-# Setting up keyboard layout.
-until keyboard_selector; do : ; done
+# Selecting and checking password.
+while ! lukspass_selector; do :; done
 
-# Choosing the target for the installation.
-info_print "Available disks for the installation:"
-lsblk
-PS3="Please select the number of the corresponding disk (e.g. 1): "
-select ENTRY in $(lsblk -dpnoNAME|grep -P "/dev/sd|nvme|vd");
-do
-    DISK="$ENTRY"
-    info_print "Arch Linux will be installed on the following disk: $DISK"
-    break
-done
+# Selecting and checking hostname.
+while ! hostname_selector; do :; done
 
-# Setting up LUKS password.
-until lukspass_selector; do : ; done
+# Selecting and checking locale.
+while ! locale_selector; do :; done
 
-# User sets up the user/root passwords.
-until userpass_selector; do : ; done
+# Selecting and checking keyboard layout.
+while ! keyboard_selector; do :; done
 
-# Ask which post-install script to run.
-until postinstall_selector; do : ; done
+# Detecting microcode.
+microcode_detector
 
-# User chooses the locale.
-until locale_selector; do : ; done
+# Choosing post-install script.
+while ! postinstall_selector; do :; done
 
-# User chooses the hostname.
-until hostname_selector; do : ; done
-
-# Warn user about deletion of old partition scheme.
-input_print "WARNING! This will wipe the current partition table on $DISK once installation starts. Do you agree [y/N]?: "
-read -r disk_response
-if ! [[ "${disk_response,,}" =~ ^(yes|y)$ ]]; then
-    error_print "Quitting."
-    exit
+# Inform the user about disk setup.
+input_print "Enter the disk to install the system on (e.g., /dev/sda): "
+read -r DISK
+if [[ ! -b "$DISK" ]]; then
+    error_print "$DISK is not a valid disk."
+    exit 1
 fi
-info_print "Wiping $DISK."
+
+# Erase old partition table.
+info_print "Cleaning partition table on $DISK."
 sgdisk -Z "$DISK" >/dev/null
 
 # Creating the partitions.
