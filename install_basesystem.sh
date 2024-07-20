@@ -1,8 +1,5 @@
 #!/usr/bin/env -S bash -e
 
-# Fixing annoying issue that breaks GitHub Actions
-# shellcheck disable=SC2001
-
 # Cleaning the TTY.
 clear
 
@@ -217,162 +214,151 @@ info_print "Formatting the EFI Partition as FAT32."
 mkfs.fat -F 32 "$ESP" &>/dev/null
 
 # Creating a LUKS Container for the root partition.
-info_print "Creating LUKS Container for the root partition."
+info_print "Creating the LUKS Container for the root partition."
 echo -n "$password" | cryptsetup luksFormat "$CRYPTROOT" -d - &>/dev/null
-echo -n "$password" | cryptsetup open "$CRYPTROOT" cryptroot -d - 
-BTRFS="/dev/mapper/cryptroot"
+
+# Opening the newly created LUKS Container.
+info_print "Opening the newly created LUKS Container."
+echo -n "$password" | cryptsetup open "$CRYPTROOT" cryptroot -d - &>/dev/null
 
 # Formatting the LUKS Container as BTRFS.
 info_print "Formatting the LUKS container as BTRFS."
-mkfs.btrfs "$BTRFS" &>/dev/null
-mount "$BTRFS" /mnt
+mkfs.btrfs /dev/mapper/cryptroot &>/dev/null
+
+# Mounting the newly created BTRFS container.
+info_print "Mounting the newly created BTRFS container."
+mount /dev/mapper/cryptroot /mnt
 
 # Creating BTRFS subvolumes.
 info_print "Creating BTRFS subvolumes."
-subvols=(snapshots var_pkgs var_log home root srv)
-for subvol in '' "${subvols[@]}"; do
-    btrfs su cr /mnt/@"$subvol" &>/dev/null
-done
+btrfs su cr /mnt/@ &>/dev/null
+btrfs su cr /mnt/@home &>/dev/null
+btrfs su cr /mnt/@srv &>/dev/null
+btrfs su cr /mnt/@snapshots &>/dev/null
+btrfs su cr /mnt/@var_log &>/dev/null
+btrfs su cr /mnt/@pkg &>/dev/null
+
+# Unmounting the BTRFS container.
+info_print "Unmounting the BTRFS container."
+umount /mnt
 
 # Mounting the newly created subvolumes.
-umount /mnt
-info_print "Mounting the newly created subvolumes."
-mountopts="ssd,noatime,compress-force=zstd:3,discard=async"
-mount -o "$mountopts",subvol=@ "$BTRFS" /mnt
-mkdir -p /mnt/{home,root,srv,.snapshots,var/{log,cache/pacman/pkg},boot}
-for subvol in "${subvols[@]:2}"; do
-    mount -o "$mountopts",subvol=@"$subvol" "$BTRFS" /mnt/"${subvol//_//}"
-done
-chmod 750 /mnt/root
-mount -o "$mountopts",subvol=@snapshots "$BTRFS" /mnt/.snapshots
-mount -o "$mountopts",subvol=@var_pkgs "$BTRFS" /mnt/var/cache/pacman/pkg
-chattr +C /mnt/var/log
-mount "$ESP" /mnt/boot/
+info_print "Mounting the BTRFS subvolumes."
+mount -o ssd,noatime,space_cache,compress=zstd,subvol=@ /dev/mapper/cryptroot /mnt
+mkdir -p /mnt/{home,srv,.snapshots,/var/log,/var/cache/pacman/pkg}
+mount -o ssd,noatime,space_cache,compress=zstd,subvol=@home /dev/mapper/cryptroot /mnt/home
+mount -o ssd,noatime,space_cache,compress=zstd,subvol=@srv /dev/mapper/cryptroot /mnt/srv
+mount -o ssd,noatime,space_cache,compress=zstd,subvol=@snapshots /dev/mapper/cryptroot /mnt/.snapshots
+mount -o ssd,noatime,space_cache,compress=zstd,subvol=@var_log /dev/mapper/cryptroot /mnt/var/log
+mount -o ssd,noatime,space_cache,compress=zstd,subvol=@pkg /dev/mapper/cryptroot /mnt/var/cache/pacman/pkg
 
-# Checking the microcode to install.
-microcode_detector
+# Mounting the boot partition.
+info_print "Mounting the boot partition."
+mkdir -p /mnt/boot
+mount "$ESP" /mnt/boot
 
-# Pacstrap (setting up a base sytem onto the new root).
+# Base + base-devel + kernel + firmware.
 info_print "Installing the base system (it may take a while)."
-pacstrap -K /mnt iwd base base-devel linux-zen "$microcode" linux-firmware linux-zen-headers git vim btrfs-progs xdg-user-dirs grub grub-btrfs rsync efibootmgr snapper reflector snap-pac zram-generator sudo &>/dev/null
+microcode_detector
+pacstrap /mnt base base-devel linux-zen linux-zen-headers linux-firmware btrfs-progs snapper vi vim "$microcode" sudo >/dev/null
 
-# Setting up the hostname.
-echo "$hostname" > /mnt/etc/hostname
-
-# Generating /etc/fstab.
+# Generating an fstab.
 info_print "Generating a new fstab."
 genfstab -U /mnt >> /mnt/etc/fstab
 
-# Configure selected locale and console keymap
-sed -i "/^#$locale/s/^#//" /mnt/etc/locale.gen
+# Setting up the system.
+info_print "Setting up the system."
+arch-chroot /mnt ln -sf /usr/share/zoneinfo/Europe/Oslo /etc/localtime &>/dev/null
+arch-chroot /mnt hwclock --systohc &>/dev/null
+echo "$locale UTF-8" >> /mnt/etc/locale.gen
+arch-chroot /mnt locale-gen &>/dev/null
 echo "LANG=$locale" > /mnt/etc/locale.conf
 echo "KEYMAP=$kblayout" > /mnt/etc/vconsole.conf
+echo "$hostname" > /mnt/etc/hostname
 
-# Setting hosts file.
-info_print "Setting hosts file."
-cat > /mnt/etc/hosts <<EOF
+# Configuring the hosts file.
+info_print "Configuring /etc/hosts."
+cat <<EOF > /mnt/etc/hosts
 127.0.0.1   localhost
 ::1         localhost
-127.0.1.1   $hostname.localdomain   $hostname
+127.0.1.1   $hostname.localdomain $hostname
 EOF
 
-# Setting up the network.
-network_installer
+# Setting up Snapper configuration for root.
+info_print "Setting up Snapper configuration for the root partition."
+arch-chroot /mnt snapper --no-dbus -c root create-config /
 
-# Configuring /etc/mkinitcpio.conf.
-info_print "Configuring /etc/mkinitcpio.conf."
-cat > /mnt/etc/mkinitcpio.conf <<EOF
-HOOKS=(systemd autodetect keyboard sd-vconsole modconf block sd-encrypt filesystems)
-EOF
+# Creating a new initial ramdisk.
+info_print "Creating a new initramfs."
+sed -i 's/HOOKS=(base udev autodetect modconf block filesystems keyboard fsck)/HOOKS=(base udev autodetect modconf block encrypt filesystems keyboard fsck)/' /mnt/etc/mkinitcpio.conf
+arch-chroot /mnt mkinitcpio -P &>/dev/null
 
-# Setting up LUKS2 encryption in grub.
-info_print "Setting up grub config."
-UUID=$(blkid -s UUID -o value $CRYPTROOT)
-sed -i "\,^GRUB_CMDLINE_LINUX=\"\",s,\",&rd.luks.name=$UUID=cryptroot root=$BTRFS," /mnt/etc/default/grub
+# Setting the root password.
+info_print "Setting the root password."
+echo -e "$password\n$password" | arch-chroot /mnt passwd &>/dev/null
 
-# Configuring the system.
-info_print "Configuring the system (timezone, system clock, initramfs, Snapper, GRUB)."
-arch-chroot /mnt /bin/bash -e <<EOF
-
-    # Setting up timezone.
-    ln -sf /usr/share/zoneinfo/$(curl -s http://ip-api.com/line?fields=timezone) /etc/localtime &>/dev/null
-
-    # Setting up clock.
-    hwclock --systohc
-
-    # Generating locales.
-    locale-gen &>/dev/null
-
-    # Generating a new initramfs.
-    mkinitcpio -P &>/dev/null
-
-    # Snapper configuration.
-    umount /.snapshots
-    rm -r /.snapshots
-    snapper --no-dbus -c root create-config /
-    btrfs subvolume delete /.snapshots &>/dev/null
-    mkdir /.snapshots
-    mount -a &>/dev/null
-    chmod 750 /.snapshots
-
-    # Installing GRUB.
-    grub-install --target=x86_64-efi --efi-directory=/boot/ --bootloader-id=GRUB &>/dev/null
-
-    # Creating grub config file.
-    grub-mkconfig -o /boot/grub/grub.cfg &>/dev/null
-
-EOF
-
-# Setting user password.
+# Setting the user password if username isn't empty.
 if [[ -n "$username" ]]; then
-    echo "%wheel ALL=(ALL:ALL) ALL" > /mnt/etc/sudoers.d/wheel
-    info_print "Adding the user $username to the system with root privilege."
-    arch-chroot /mnt useradd -m -G wheel -s /bin/bash "$username"
-    info_print "Setting user password for $username."
-    echo "$username:$userpass" | arch-chroot /mnt chpasswd
+    info_print "Creating $username with root privilege."
+    arch-chroot /mnt useradd -m "$username" &>/dev/null
+    echo -e "$userpass\n$userpass" | arch-chroot /mnt passwd "$username" &>/dev/null
+    echo "$username ALL=(ALL) ALL" >> /mnt/etc/sudoers.d/"$username"
 fi
 
-# Boot backup hook.
-info_print "Configuring /boot backup when pacman transactions are made."
-mkdir /mnt/etc/pacman.d/hooks
-cat > /mnt/etc/pacman.d/hooks/50-bootbackup.hook <<EOF
-[Trigger]
-Operation = Upgrade
-Operation = Install
-Operation = Remove
-Type = Path
-Target = usr/lib/modules/*/vmlinuz
+# Setting up the Network.
+network_installer
 
-[Action]
-Depends = rsync
-Description = Backing up /boot...
-When = PostTransaction
-Exec = /usr/bin/rsync -a --delete /boot /.bootbackup
+# Installing systemd-boot.
+info_print "Installing systemd-boot."
+arch-chroot /mnt bootctl install &>/dev/null
+
+# Configuring systemd-boot.
+info_print "Configuring systemd-boot."
+UUID=$(blkid -s UUID -o value "$CRYPTROOT")
+cat <<EOF > /mnt/boot/loader/entries/arch.conf
+title Arch Linux
+linux /vmlinuz-linux-zen
+initrd /$microcode.img
+initrd /initramfs-linux-zen.img
+options cryptdevice=UUID=$UUID:cryptroot root=/dev/mapper/cryptroot rootflags=subvol=@ rw
 EOF
 
-# ZRAM configuration.
-info_print "Configuring ZRAM."
-cat > /mnt/etc/systemd/zram-generator.conf <<EOF
-[zram0]
-zram-size = min(ram, 8192)
+cat <<EOF > /mnt/boot/loader/loader.conf
+default arch
+timeout 5
+console-mode max
+editor no
 EOF
 
-# Pacman eye-candy features.
-info_print "Enabling colours, animations, and parallel downloads for pacman."
-sed -Ei 's/^#(Color)$/\1\nILoveCandy/;s/^#(ParallelDownloads).*/\1 = 10/' /mnt/etc/pacman.conf
+# Enabling periodic TRIM for SSDs.
+info_print "Enabling periodic TRIM for SSDs."
+arch-chroot /mnt systemctl enable fstrim.timer &>/dev/null
 
-# Enabling various services.
-info_print "Enabling Reflector, automatic snapshots, BTRFS scrubbing and systemd-oomd."
-services=(reflector.timer snapper-timeline.timer snapper-cleanup.timer btrfs-scrub@-.timer btrfs-scrub@home.timer btrfs-scrub@var-log.timer btrfs-scrub@\\x2esnapshots.timer grub-btrfs.path systemd-oomd)
-for service in "${services[@]}"; do
-    systemctl enable "$service" --root=/mnt &>/dev/null
-done
+# Enabling Snapper timeline and cleanup timers.
+info_print "Enabling Snapper timeline and cleanup timers."
+arch-chroot /mnt systemctl enable snapper-timeline.timer &>/dev/null
+arch-chroot /mnt systemctl enable snapper-cleanup.timer &>/dev/null
 
-# Finishing up.
-info_print "Almost done!"
-info_print "1. Type reboot and hit enter to reboot the system."
-info_print "2. Log in with your user and password."
-info_print "3. bash <(curl -sL bit.ly/install_hyprarch)"
-info_print "4. Reboot."
-info_print "GOOD LUCK! :)"
-exit
+# Prompt user for post-installation script.
+input_print "Which post-installation script would you like to run? (1 = desktop, 2 = htpc): "
+read -r script_choice
+case "$script_choice" in
+    1) info_print "Desktop script will be executed after reboot."
+       echo "bash <(curl -sL bit.ly/install_hyprarch)" > /mnt/root/post_install.sh;;
+    2) info_print "HTPC script will be executed after reboot."
+       echo "bash <(curl -sL bit.ly/install_hyprhtpc)" > /mnt/root/post_install.sh;;
+    *) error_print "Invalid choice. No post-installation script will be executed.";;
+esac
+
+info_print "Making post_install.sh executable."
+chmod +x /mnt/root/post_install.sh
+
+# Finalizing the installation.
+info_print "The first part of installation is done. Please reboot and run /root/post_install.sh after reboot to complete the setup."
+
+# Unmounting all partitions.
+info_print "Unmounting all partitions."
+umount -R /mnt
+
+# Informing the user that the installation is done.
+info_print "The installation is complete. You can reboot now."
