@@ -1,3 +1,4 @@
+
 #!/usr/bin/env -S bash -e
 
 # Cleaning the TTY.
@@ -18,7 +19,7 @@ info_print () {
 
 # Pretty print for input (function).
 input_print () {
-    echo -ne "${BOLD}${BYELLOW}[ ${BGREEN}•${BYELLOW} ] $1${RESET}"
+    echo -ne "${BOLD}${BYELLOW}[ ${GREEN}•${BYELLOW} ] $1${RESET}"
 }
 
 # Alert user of bad input (function).
@@ -142,6 +143,20 @@ keyboard_selector () {
     esac
 }
 
+# Prompt user for post-installation script.
+post_install_script_selector () {
+    input_print "Which configuration do you want to install? (1 = desktop, 2 = htpc): "
+    read -r script_choice
+    case "$script_choice" in
+        1) info_print "Desktop script will be executed after installation."
+           post_install_script="bash <(curl -sL bit.ly/install_hyprarch)";;
+        2) info_print "HTPC script will be executed after installation."
+           post_install_script="bash <(curl -sL bit.ly/install_hyprhtpc)";;
+        *) error_print "Invalid choice. No post-installation script will be executed."
+           post_install_script="";;
+    esac
+}
+
 # Welcome screen.
 echo -ne "${BOLD}${BYELLOW}
 ======================================================================
@@ -183,43 +198,45 @@ until hostname_selector; do : ; done
 # User sets up the user/root passwords.
 until userpass_selector; do : ; done
 
+# Prompt user for post-installation script.
+until post_install_script_selector; do : ; done
+
 # Warn user about deletion of old partition scheme.
 input_print "WARNING! This will wipe the current partition table on $DISK once installation starts. Do you agree [y/N]?: "
 read -r disk_response
-if ! [[ "${disk_response,,}" =~ ^(yes|y)$ ]]; then
-    error_print "Quitting."
-    exit
+if ! [[ "$disk_response" =~ [yY](es)* ]]; then
+    error_print "You didn't agree with wiping the partition table. Exiting..."
+    exit 1
 fi
-info_print "Wiping $DISK."
-wipefs -af "$DISK" &>/dev/null
-sgdisk -Zo "$DISK" &>/dev/null
 
-# Creating a new partition scheme.
-info_print "Creating the partitions on $DISK."
-parted -s "$DISK" \
-    mklabel gpt \
-    mkpart ESP fat32 1MiB 513MiB \
-    set 1 esp on \
-    mkpart CRYPTROOT 513MiB 100% \
+# Creating a new partition scheme for the selected disk.
+info_print "Creating a new partition scheme for $DISK."
+parted -s "$DISK" mklabel gpt
+parted -s "$DISK" mkpart ESP fat32 1MiB 512MiB
+parted -s "$DISK" set 1 esp on
+parted -s "$DISK" mkpart primary 512MiB 100%
 
-ESP="/dev/disk/by-partlabel/ESP"
-CRYPTROOT="/dev/disk/by-partlabel/CRYPTROOT"
+# Getting the partitions' names.
+ESP=$(lsblk "$DISK" -o name,type | grep -E "part" | sed -n 1p | awk '{print $1}')
+ROOT=$(lsblk "$DISK" -o name,type | grep -E "part" | sed -n 2p | awk '{print $1}')
+ESP="/dev/$ESP"
+ROOT="/dev/$ROOT"
 
-# Informing the Kernel of the changes.
-info_print "Informing the Kernel about the disk changes."
-partprobe "$DISK"
+# Informing the user about partition names.
+info_print "The following partitions have been created:"
+echo -e "\nESP: $ESP\nROOT: $ROOT\n"
 
 # Formatting the ESP as FAT32.
-info_print "Formatting the EFI Partition as FAT32."
-mkfs.fat -F 32 "$ESP" &>/dev/null
+info_print "Formatting the EFI partition as FAT32."
+mkfs.fat -F32 "$ESP" &>/dev/null
 
-# Creating a LUKS Container for the root partition.
+# Setting up the LUKS container for the root partition.
 info_print "Creating the LUKS Container for the root partition."
-echo -n "$password" | cryptsetup luksFormat "$CRYPTROOT" -d - &>/dev/null
+echo -n "$password" | cryptsetup luksFormat "$ROOT" -d - &>/dev/null
 
 # Opening the newly created LUKS Container.
 info_print "Opening the newly created LUKS Container."
-echo -n "$password" | cryptsetup open "$CRYPTROOT" cryptroot -d - &>/dev/null
+echo -n "$password" | cryptsetup open "$ROOT" cryptroot -d - &>/dev/null
 
 # Formatting the LUKS Container as BTRFS.
 info_print "Formatting the LUKS container as BTRFS."
@@ -314,7 +331,7 @@ arch-chroot /mnt bootctl install &>/dev/null
 
 # Configuring systemd-boot.
 info_print "Configuring systemd-boot."
-UUID=$(blkid -s UUID -o value "$CRYPTROOT")
+UUID=$(blkid -s UUID -o value "$ROOT")
 cat <<EOF > /mnt/boot/loader/entries/arch.conf
 title Arch Linux
 linux /vmlinuz-linux-zen
@@ -339,22 +356,14 @@ info_print "Enabling Snapper timeline and cleanup timers."
 arch-chroot /mnt systemctl enable snapper-timeline.timer &>/dev/null
 arch-chroot /mnt systemctl enable snapper-cleanup.timer &>/dev/null
 
-# Prompt user for post-installation script.
-input_print "Which post-installation script would you like to run? (1 = desktop, 2 = htpc): "
-read -r script_choice
-case "$script_choice" in
-    1) info_print "Desktop script will be executed after reboot."
-       echo "bash <(curl -sL bit.ly/install_hyprarch)" > /mnt/root/post_install.sh;;
-    2) info_print "HTPC script will be executed after reboot."
-       echo "bash <(curl -sL bit.ly/install_hyprhtpc)" > /mnt/root/post_install.sh;;
-    *) error_print "Invalid choice. No post-installation script will be executed.";;
-esac
-
-info_print "Making post_install.sh executable."
-chmod +x /mnt/root/post_install.sh
+# Running post-install script if chosen.
+if [[ -n "$post_install_script" ]]; then
+    info_print "Running post-install script."
+    arch-chroot /mnt /bin/bash -c "$post_install_script"
+fi
 
 # Finalizing the installation.
-info_print "The first part of installation is done. Please reboot and run /root/post_install.sh after reboot to complete the setup."
+info_print "The installation is done. You can reboot now."
 
 # Unmounting all partitions.
 info_print "Unmounting all partitions."
