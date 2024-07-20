@@ -156,6 +156,21 @@ keyboard_selector () {
     esac
 }
 
+# List available disks and let the user select one.
+disk_selector () {
+    echo
+    info_print "Listing available disks:"
+    lsblk -d -o NAME,SIZE,MODEL | grep -v 'loop'
+    echo
+    input_print "Enter the disk to install the system on (e.g., /dev/sda): "
+    read -r DISK
+    if [[ ! -b "$DISK" ]]; then
+        error_print "$DISK is not a valid disk."
+        return 1
+    fi
+    return 0
+}
+
 # Welcome screen.
 echo -ne "${BOLD}${BYELLOW}
 ======================================================================
@@ -170,6 +185,9 @@ echo -ne "${BOLD}${BYELLOW}
 ======================================================================
 ${RESET}"
 info_print "Welcome to the first part of installing Hypr-Arch!"
+
+# Selecting and checking disk.
+while ! disk_selector; do :; done
 
 # Selecting and checking password.
 while ! lukspass_selector; do :; done
@@ -189,14 +207,6 @@ microcode_detector
 # Choosing post-install script.
 while ! postinstall_selector; do :; done
 
-# Inform the user about disk setup.
-input_print "Enter the disk to install the system on (e.g., /dev/sda): "
-read -r DISK
-if [[ ! -b "$DISK" ]]; then
-    error_print "$DISK is not a valid disk."
-    exit 1
-fi
-
 # Erase old partition table.
 info_print "Cleaning partition table on $DISK."
 sgdisk -Z "$DISK" >/dev/null
@@ -210,7 +220,7 @@ info_print "Partitions have been created on $DISK."
 EFI_PART="${DISK}1"
 CRYPT_PART="${DISK}2"
 
-# Inform the user that the partitions have been created.
+# Formatting and setting up partitions.
 info_print "Formatting the EFI partition."
 mkfs.vfat -F32 "$EFI_PART" &>/dev/null
 
