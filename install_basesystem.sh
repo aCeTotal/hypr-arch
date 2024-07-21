@@ -282,10 +282,28 @@ cat > /mnt/etc/mkinitcpio.conf <<EOF
 HOOKS=(systemd autodetect keyboard sd-vconsole modconf block sd-encrypt filesystems)
 EOF
 
-# Setting up LUKS2 encryption in grub.
-info_print "Setting up grub config."
-UUID=$(blkid -s UUID -o value $CRYPTROOT)
-sed -i "\,^GRUB_CMDLINE_LINUX=\"\",s,\",&rd.luks.name=$UUID=cryptroot root=$BTRFS," /mnt/etc/default/grub
+# Configuring systemd-boot loader entries.
+info_print "Configuring systemd-boot loader entries."
+cat > /boot/loader/entries/hyprarch.conf <<EOF
+title   HyprArch
+linux   /vmlinuz-linux-zen
+initrd  /initramfs-linux-zen.img
+options cryptdevice=PARTUUID=$(blkid -s PARTUUID -o value "$CRYPTPART"):cryptroot root=/dev/mapper/cryptroot rw
+EOF
+
+# Creating systemd pacman hook
+info_print "Creating systemd-boot pacman hook."
+cat > /mnt/etc/pacman.d/hooks/95-systemd-boot.hook <<EOF
+[Trigger]
+Type = Package
+Operation = Upgrade
+Target = systemd
+
+[Action]
+Description = Gracefully upgrading systemd-boot...
+When = PostTransaction
+Exec = /usr/bin/systemctl restart systemd-boot-update.service
+EOF
 
 # Configuring the system.
 info_print "Configuring the system (timezone, system clock, initramfs, Snapper, systemd-boot)."
@@ -315,13 +333,6 @@ arch-chroot /mnt /bin/bash -e <<EOF
     # Setting up systemd-boot.
     bootctl --path=/boot install &>/dev/null
 
-    # Configure systemd-boot loader entries.
-    cat <<EOF > /boot/loader/entries/arch.conf &>/dev/null
-    title   Arch Linux
-    linux   /vmlinuz-linux
-    initrd  /initramfs-linux.img
-    options cryptdevice=PARTUUID=$(blkid -s PARTUUID -o value "$CRYPTPART"):cryptroot root=/dev/mapper/cryptroot rw
-    EOF
 EOF
 
 # Setting user password.
