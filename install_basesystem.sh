@@ -164,7 +164,7 @@ until keyboard_selector; do : ; done
 info_print "Available disks for the installation:"
 lsblk
 PS3="Please select the number of the corresponding disk (e.g. 1): "
-select ENTRY in $(lsblk -d -o NAME,SIZE,VENDOR -np |grep -P "/dev/sd|nvme|vd");
+select ENTRY in $(lsblk -o NAME,SIZE,VENDOR | awk 'NR>1 {print $1 " - " $2 ": (" $3 ")"}' | grep -P "/dev/sd|nvme|vd");
 do
     DISK="$ENTRY"
     info_print "Arch Linux will be installed on the following disk: $DISK"
