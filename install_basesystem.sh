@@ -157,10 +157,6 @@ echo -ne "${BOLD}${BYELLOW}
 ${RESET}"
 info_print "Welcome to the installation of HyprArch. A system that attempts to make the world of bleeding-edge software more stable and as user-friendly as possible with the 'Arch way' of doing things."
 
-# Setting up keyboard layout.
-until keyboard_selector; do : ; done
-
-
 # Choosing the target for the installation.
 info_print "Available disks for the installation:"
 lsblk -o NAME,SIZE,VENDOR,TYPE | awk '$4 == "disk" {print $1 " - " $2 ": (" $3 ")"}'
@@ -172,6 +168,9 @@ do
     info_print "Arch Linux will be installed on the following disk: $DISK"
     break
 done
+
+# Setting up keyboard layout.
+until keyboard_selector; do : ; done
 
 # Setting up LUKS password.
 until lukspass_selector; do : ; done
@@ -317,12 +316,30 @@ EOF
 # Configuring systemd-boot loader entries.
 info_print "Configuring systemd-boot loader entries."
 mkdir -p /mnt/boot/loader/entries
+
+# Hent PARTUUID for den krypterte partisjonen
+PARTUUID=$(blkid -s PARTUUID -o value "$CRYPTROOT")
+
+# Kontroller at PARTUUID ble funnet
+if [ -z "$PARTUUID" ]; then
+  echo "Kunne ikke finne PARTUUID for $CRYPTROOT"
+  exit 1
+fi
+
 cat > /mnt/boot/loader/entries/hyprarch.conf <<EOF
 title   HyprArch
 linux   /vmlinuz-linux-zen
 initrd  /initramfs-linux-zen.img
-options cryptdevice=PARTUUID=$(blkid -s PARTUUID -o value "$CRYPTPART"):cryptroot root=/dev/mapper/cryptroot rw
+options cryptdevice=PARTUUID=$PARTUUID:cryptroot root=/dev/mapper/cryptroot rw
 EOF
+
+# Bekreft at filen er opprettet
+if [ -f /mnt/boot/loader/entries/hyprarch.conf ]; then
+  echo "Konfigurasjonsfilen er opprettet med PARTUUID=$PARTUUID"
+else
+  echo "Kunne ikke opprette konfigurasjonsfilen"
+  exit 1
+fi
 
 
 # Creating systemd pacman hook
@@ -340,7 +357,7 @@ When = PostTransaction
 Exec = /usr/bin/systemctl restart systemd-boot-update.service
 EOF
 
-arch-chroot /mnt bootctl update --path=/boot
+bootctl update --path=/mnt/boot
 
 
 # Setting user password.
