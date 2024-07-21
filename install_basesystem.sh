@@ -253,7 +253,7 @@ microcode_detector
 
 # Pacstrap (setting up a base sytem onto the new root).
 info_print "Installing the base packages (it may take a while)."
-pacstrap -K /mnt iwd base base-devel rankmirrors linux-zen "$microcode" linux-firmware linux-zen-headers git vim btrfs-progs xdg-user-dirs rsync efibootmgr snapper reflector snap-pac zram-generator sudo &>/dev/null
+pacstrap -K /mnt iwd base base-devel linux-zen "$microcode" linux-firmware linux-zen-headers git vim btrfs-progs xdg-user-dirs rsync efibootmgr snapper reflector snap-pac zram-generator sudo &>/dev/null
 
 # Setting up the hostname.
 echo "$hostname" > /mnt/etc/hostname
@@ -283,14 +283,6 @@ info_print "Configuring /etc/mkinitcpio.conf."
 cat > /mnt/etc/mkinitcpio.conf <<EOF
 HOOKS=(systemd autodetect keyboard sd-vconsole modconf block sd-encrypt filesystems)
 EOF
-
-sed -Ei 's/^#(Color)$/\1\nILoveCandy/;s/^#(ParallelDownloads).*/\1 = 10/' /mnt/etc/pacman.conf
-pacman -Syy
-rankmirrors -n 6 /mnt/etc/pacman.d/mirrorlist | tee /mnt/etc/pacman.d/mirrorlist
-mkdir -p /mnt/ramdisk
-mount -t tmpfs -o size=8G tmpfs /mnt/ramdisk
-echo 'CacheDir = /mnt/ramdisk/pacman-cache' >> /mnt/etc/pacman.conf
-
 
 # Configuring the system.
 info_print "Configuring the system (timezone, system clock, initramfs, Snapper, systemd-boot)."
@@ -347,7 +339,7 @@ When = PostTransaction
 Exec = /usr/bin/systemctl restart systemd-boot-update.service
 EOF
 
-bootctl update
+bootctl update --esp-path=$ESP
 
 
 # Setting user password.
@@ -384,6 +376,10 @@ cat > /mnt/etc/systemd/zram-generator.conf <<EOF
 zram-size = min(ram, 8192)
 compression-algorithm = lz4
 EOF
+
+# Pacman eye-candy features.
+info_print "Enabling colours, animations, and parallel downloads for pacman."
+sed -Ei 's/^#(Color)$/\1\nILoveCandy/;s/^#(ParallelDownloads).*/\1 = 10/' /mnt/etc/pacman.conf
 
 # Enabling various services.
 info_print "Enabling Reflector, automatic snapshots, BTRFS scrubbing and systemd-oomd."
