@@ -160,6 +160,7 @@ info_print "Welcome to the installation of HyprArch. A system that attempts to m
 # Setting up keyboard layout.
 until keyboard_selector; do : ; done
 
+
 # Choosing the target for the installation.
 info_print "Available disks for the installation:"
 lsblk -o NAME,SIZE,VENDOR,TYPE | awk '$4 == "disk" {print $1 " - " $2 ": (" $3 ")"}'
@@ -183,6 +184,15 @@ until hostname_selector; do : ; done
 
 # User sets up the user/root passwords.
 until userpass_selector; do : ; done
+
+info_print "Before we starts the installation. Let's boost the installation speed first."
+sed -Ei 's/^#(Color)$/\1\nILoveCandy/;s/^#(ParallelDownloads).*/\1 = 10/' /mnt/etc/pacman.conf
+pacman -Syy
+rankmirrors -n 6 /etc/pacman.d/mirrorlist | tee /etc/pacman.d/mirrorlist
+mkdir /mnt/ramdisk
+mount -t tmpfs -o size=8G tmpfs /mnt/ramdisk
+echo 'CacheDir = /mnt/ramdisk/pacman-cache' >> /etc/pacman.conf
+
 
 # Warn user about deletion of old partition scheme.
 input_print "WARNING! This will wipe the current partition table on $DISK once installation starts. Do you agree [y/N]?: "
@@ -315,6 +325,7 @@ EOF
 
 # Configuring systemd-boot loader entries.
 info_print "Configuring systemd-boot loader entries."
+mkdir -p /boot/loader/entries
 cat > /boot/loader/entries/hyprarch.conf <<EOF
 title   HyprArch
 linux   /vmlinuz-linux-zen
@@ -372,11 +383,8 @@ info_print "Configuring ZRAM."
 cat > /mnt/etc/systemd/zram-generator.conf <<EOF
 [zram0]
 zram-size = min(ram, 8192)
+compression-algorithm = lz4
 EOF
-
-# Pacman eye-candy features.
-info_print "Enabling colours, animations, and parallel downloads for pacman."
-sed -Ei 's/^#(Color)$/\1\nILoveCandy/;s/^#(ParallelDownloads).*/\1 = 10/' /mnt/etc/pacman.conf
 
 # Enabling various services.
 info_print "Enabling Reflector, automatic snapshots, BTRFS scrubbing and systemd-oomd."
@@ -385,4 +393,6 @@ for service in "${services[@]}"; do
     systemctl enable "$service" --root=/mnt &>/dev/null
 done
 
+umount /mnt/ramdisk
+rmdir /mnt/ramdisk
 exit
