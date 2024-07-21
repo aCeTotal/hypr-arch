@@ -1,8 +1,5 @@
 #!/usr/bin/env -S bash -e
 
-# Fixing annoying issue that breaks GitHub Actions
-# shellcheck disable=SC2001
-
 # Cleaning the TTY.
 clear
 
@@ -158,7 +155,7 @@ echo -ne "${BOLD}${BYELLOW}
                                                                        
 ======================================================================
 ${RESET}"
-info_print "Welcome to the first part of installing Hypr-Arch!"
+info_print "Welcome to the installation of HyprArch. A system that attempts to make the world of bleeding-edge software more stable and as user-friendly as possible with the 'Arch way' of doing things."
 
 # Setting up keyboard layout.
 until keyboard_selector; do : ; done
@@ -253,8 +250,8 @@ mount -o uid=0,gid=0,fmask=0077,dmask=0077 "$ESP" /mnt/boot/
 microcode_detector
 
 # Pacstrap (setting up a base sytem onto the new root).
-info_print "Installing the base system (it may take a while)."
-pacstrap -K /mnt iwd base base-devel linux-zen "$microcode" linux-firmware linux-zen-headers git vim btrfs-progs xdg-user-dirs grub grub-btrfs rsync efibootmgr snapper reflector snap-pac zram-generator sudo &>/dev/null
+info_print "Installing the base packages (it may take a while)."
+pacstrap -K /mnt iwd base base-devel linux-zen "$microcode" linux-firmware linux-zen-headers git vim btrfs-progs xdg-user-dirs rsync efibootmgr snapper reflector snap-pac zram-generator sudo &>/dev/null
 
 # Setting up the hostname.
 echo "$hostname" > /mnt/etc/hostname
@@ -291,7 +288,7 @@ UUID=$(blkid -s UUID -o value $CRYPTROOT)
 sed -i "\,^GRUB_CMDLINE_LINUX=\"\",s,\",&rd.luks.name=$UUID=cryptroot root=$BTRFS," /mnt/etc/default/grub
 
 # Configuring the system.
-info_print "Configuring the system (timezone, system clock, initramfs, Snapper, GRUB)."
+info_print "Configuring the system (timezone, system clock, initramfs, Snapper, systemd-boot)."
 arch-chroot /mnt /bin/bash -e <<EOF
 
     # Setting up timezone.
@@ -316,15 +313,15 @@ arch-chroot /mnt /bin/bash -e <<EOF
     chmod 750 /.snapshots
 
     # Setting up systemd-boot.
-    bootctl --path=/boot install
+    bootctl --path=/boot install &>/dev/null
 
     # Configure systemd-boot loader entries.
-    cat <<EOF > /boot/loader/entries/arch.conf
+    cat <<EOF > /boot/loader/entries/arch.conf &>/dev/null
     title   Arch Linux
     linux   /vmlinuz-linux
     initrd  /initramfs-linux.img
     options cryptdevice=PARTUUID=$(blkid -s PARTUUID -o value "$CRYPTPART"):cryptroot root=/dev/mapper/cryptroot rw
-
+    EOF
 EOF
 
 # Setting user password.
@@ -372,11 +369,4 @@ for service in "${services[@]}"; do
     systemctl enable "$service" --root=/mnt &>/dev/null
 done
 
-# Finishing up.
-info_print "Almost done!"
-info_print "1. Type reboot and hit enter to reboot the system."
-info_print "2. Log in with your user and password."
-info_print "3. bash <(curl -sL bit.ly/install_hyprarch)"
-info_print "4. Reboot."
-info_print "GOOD LUCK! :)"
 exit
