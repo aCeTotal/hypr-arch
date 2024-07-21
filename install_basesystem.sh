@@ -156,7 +156,7 @@ echo -ne "${BOLD}${BYELLOW}
 ======================================================================
 ${RESET}"
 info_print "Welcome to the installation of HyprArch. A system that attempts to make the world of bleeding-edge software more stable and as user-friendly as possible with the 'Arch way' of doing things."
-
+echo
 # Choosing the target for the installation.
 info_print "Available disks for the installation:"
 lsblk -o NAME,SIZE,VENDOR,TYPE | awk '$4 == "disk" {print $1 " - " $2 ": (" $3 ")"}'
@@ -245,7 +245,8 @@ chmod 750 /mnt/root
 mount -o "$mountopts",subvol=@snapshots "$BTRFS" /mnt/.snapshots
 mount -o "$mountopts",subvol=@var_pkgs "$BTRFS" /mnt/var/cache/pacman/pkg
 chattr +C /mnt/var/log
-mount -o uid=0,gid=0,fmask=0077,dmask=0077 "$ESP" /mnt/boot/
+mount "$ESP" /mnt/boot/
+#mount -o uid=0,gid=0,fmask=0077,dmask=0077 "$ESP" /mnt/boot/
 
 # Checking the microcode to install.
 microcode_detector
