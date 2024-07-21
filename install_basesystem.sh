@@ -282,29 +282,6 @@ cat > /mnt/etc/mkinitcpio.conf <<EOF
 HOOKS=(systemd autodetect keyboard sd-vconsole modconf block sd-encrypt filesystems)
 EOF
 
-# Configuring systemd-boot loader entries.
-info_print "Configuring systemd-boot loader entries."
-cat > /boot/loader/entries/hyprarch.conf <<EOF
-title   HyprArch
-linux   /vmlinuz-linux-zen
-initrd  /initramfs-linux-zen.img
-options cryptdevice=PARTUUID=$(blkid -s PARTUUID -o value "$CRYPTPART"):cryptroot root=/dev/mapper/cryptroot rw
-EOF
-
-# Creating systemd pacman hook
-info_print "Creating systemd-boot pacman hook."
-cat > /mnt/etc/pacman.d/hooks/95-systemd-boot.hook <<EOF
-[Trigger]
-Type = Package
-Operation = Upgrade
-Target = systemd
-
-[Action]
-Description = Gracefully upgrading systemd-boot...
-When = PostTransaction
-Exec = /usr/bin/systemctl restart systemd-boot-update.service
-EOF
-
 # Configuring the system.
 info_print "Configuring the system (timezone, system clock, initramfs, Snapper, systemd-boot)."
 arch-chroot /mnt /bin/bash -e <<EOF
@@ -335,6 +312,33 @@ arch-chroot /mnt /bin/bash -e <<EOF
 
 EOF
 
+# Configuring systemd-boot loader entries.
+info_print "Configuring systemd-boot loader entries."
+cat > /boot/loader/entries/hyprarch.conf <<EOF
+title   HyprArch
+linux   /vmlinuz-linux-zen
+initrd  /initramfs-linux-zen.img
+options cryptdevice=PARTUUID=$(blkid -s PARTUUID -o value "$CRYPTPART"):cryptroot root=/dev/mapper/cryptroot rw
+EOF
+
+# Creating systemd pacman hook
+info_print "Creating systemd-boot pacman hook."
+mkdir -p /mnt/etc/pacman.d/hooks
+cat > /mnt/etc/pacman.d/hooks/95-systemd-boot.hook <<EOF
+[Trigger]
+Type = Package
+Operation = Upgrade
+Target = systemd
+
+[Action]
+Description = Gracefully upgrading systemd-boot...
+When = PostTransaction
+Exec = /usr/bin/systemctl restart systemd-boot-update.service
+EOF
+
+bootctl update
+
+
 # Setting user password.
 if [[ -n "$username" ]]; then
     echo "%wheel ALL=(ALL:ALL) ALL" > /mnt/etc/sudoers.d/wheel
@@ -346,7 +350,7 @@ fi
 
 # Boot backup hook.
 info_print "Configuring /boot backup when pacman transactions are made."
-mkdir /mnt/etc/pacman.d/hooks
+mkdir -p /mnt/etc/pacman.d/hooks
 cat > /mnt/etc/pacman.d/hooks/50-bootbackup.hook <<EOF
 [Trigger]
 Operation = Upgrade
