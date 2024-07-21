@@ -310,19 +310,20 @@ arch-chroot /mnt /bin/bash -e <<EOF
     chmod 750 /.snapshots
 
     # Setting up systemd-boot.
-    bootctl --path=/boot install &>/dev/null
+    bootctl --path=/boot install
 
 EOF
 
 # Configuring systemd-boot loader entries.
 info_print "Configuring systemd-boot loader entries."
-mkdir -p /boot/loader/entries
-cat > /boot/loader/entries/hyprarch.conf <<EOF
+mkdir -p /mnt/boot/loader/entries
+cat > /mnt/boot/loader/entries/hyprarch.conf <<EOF
 title   HyprArch
 linux   /vmlinuz-linux-zen
 initrd  /initramfs-linux-zen.img
 options cryptdevice=PARTUUID=$(blkid -s PARTUUID -o value "$CRYPTPART"):cryptroot root=/dev/mapper/cryptroot rw
 EOF
+
 
 # Creating systemd pacman hook
 info_print "Creating systemd-boot pacman hook."
@@ -339,7 +340,7 @@ When = PostTransaction
 Exec = /usr/bin/systemctl restart systemd-boot-update.service
 EOF
 
-bootctl update --esp-path=$ESP
+arch-chroot /mnt bootctl update --path=/boot
 
 
 # Setting user password.
@@ -388,6 +389,4 @@ for service in "${services[@]}"; do
     systemctl enable "$service" --root=/mnt &>/dev/null
 done
 
-umount /mnt/ramdisk
-rmdir /mnt/ramdisk
 exit
