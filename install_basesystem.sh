@@ -281,7 +281,7 @@ network_installer
 # Configuring /etc/mkinitcpio.conf.
 info_print "Configuring /etc/mkinitcpio.conf."
 cat > /mnt/etc/mkinitcpio.conf <<EOF
-HOOKS=(base udev systemd autodetect sd-vconsole modconf block keyboard sd-encrypt filesystems fsck)
+HOOKS=(base udev autodetect keymap modconf block keyboard encrypt filesystems fsck)
 EOF
 
 # Configuring the system.
@@ -331,7 +331,7 @@ cat > /mnt/boot/loader/entries/arch.conf <<EOF
 title   Arch Linux
 linux   /vmlinuz-linux-zen
 initrd  /initramfs-linux-zen.img
-options rd.luks.name=$PARTUUID=cryptroot root=$BTRFS
+options cryptdevice=PARTUUID=$PARTUUID:cryptroot root=$BTRFS rw
 EOF
 
 # Bekreft at filen er opprettet
@@ -342,14 +342,9 @@ else
   exit 1
 fi
 
-cat > /mnt/etc/crypttab.initramfs <<EOF
-cryptroot UUID=$PARTUUID none luks
-EOF
-
 cat > /mnt/boot/loader/loader.conf <<EOF
 default arch
-timout 1
-editor 0
+timout 5
 EOF
 
 # Creating systemd pacman hook
