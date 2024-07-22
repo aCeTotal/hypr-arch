@@ -281,7 +281,7 @@ network_installer
 # Configuring /etc/mkinitcpio.conf.
 info_print "Configuring /etc/mkinitcpio.conf."
 cat > /mnt/etc/mkinitcpio.conf <<EOF
-HOOKS=(systemd autodetect keyboard sd-vconsole modconf block sd-encrypt filesystems)
+HOOKS=(base udev systemd autodetect sd-vconsole modconf block keyboard sd-encrypt filesystems fsck)
 EOF
 
 # Configuring the system.
@@ -327,11 +327,11 @@ if [ -z "$PARTUUID" ]; then
   exit 1
 fi
 
-cat > /mnt/boot/loader/entries/hyprarch.conf <<EOF
-title   HyprArch
+cat > /mnt/boot/loader/entries/arch.conf <<EOF
+title   Arch Linux
 linux   /vmlinuz-linux-zen
 initrd  /initramfs-linux-zen.img
-options cryptdevice=PARTUUID=$PARTUUID:cryptroot root=/dev/mapper/cryptroot rw
+options rd.luks.name=$PARTUUID=cryptroot root=/dev/mapper/cryptroot rootflags=subvol=@ rw
 EOF
 
 # Bekreft at filen er opprettet
