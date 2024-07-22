@@ -406,7 +406,7 @@ for service in "${services[@]}"; do
 done
 
 info_print "Enabling multilib, installing AUR-helper Yay and adding the dotfiles."
-arch-chroot /mnt /bin/bash -e <<EOF
+arch-chroot /mnt su - $username
 
 # Enable multilib for packages like Steam
 sudo sed -i "/\[multilib\]/,/Include/"'s/^#//' /etc/pacman.conf
@@ -425,7 +425,7 @@ git remote add -f origin https://github.com/aCeTotal/hypr-arch.git
 git config core.sparseCheckout true
 echo "dotfiles/*" >> .git/info/sparse-checkout
 git pull origin master
-mkdir -p /usr/share/wallpapers
+sudo mkdir -p /usr/share/wallpapers
 cp /home/$username/.dotfiles/wallpapers/* /usr/share/wallpapers
 rm -rf /home/$username/.dotfiles/wallpapers 
 chown -R $username:$username /home/$username/.dotfiles
@@ -433,16 +433,14 @@ chown -R $username:$username /home/$username/.dotfiles
 # Adding the current user to groups
 gpasswd -a $username wheel input  >/dev/null
 
-EOF
-
 info_print "Installing the rest of the packages."
-arch-chroot /mnt /bin/bash -e <<EOF
+arch-chroot /mnt su - $username
 
-pacman -Syu --noconfirm sddm nfs-utils qt5-wayland qt5ct wofi xdg-desktop-portal-hyprland qt6-wayland qt6ct qt5-svg qt5-quickcontrols2 qt5-graphicaleffects gtk3 polkit-gnome pipewire pipewire-pulse pipewire-jack jq network-manager-sstp sstp-client 
-pacman -Syu --noconfirm swaybg github-cli wl-clipboard cliphist timeshift fail2ban swaybg ttf-jetbrains-mono-nerd papirus-icon-theme thunar
-pacman -Syu --noconfirm wireplumber grim slurp pkgfile swappy linux-headers firewalld rmlint rebuild-detector p7zip unrar rar zip unzip
-pacman -Syu --noconfirm network-manager-applet pavucontrol freecad steam
-pacman -Syu --noconfirm grim slurp swappy hyprland-git
+sudo pacman -Syu --noconfirm sddm nfs-utils qt5-wayland qt5ct wofi xdg-desktop-portal-hyprland qt6-wayland qt6ct qt5-svg qt5-quickcontrols2 qt5-graphicaleffects gtk3 polkit-gnome pipewire pipewire-pulse pipewire-jack jq network-manager-sstp sstp-client 
+sudo pacman -Syu --noconfirm swaybg github-cli wl-clipboard cliphist timeshift fail2ban swaybg ttf-jetbrains-mono-nerd papirus-icon-theme thunar
+sudo pacman -Syu --noconfirm wireplumber grim slurp pkgfile swappy linux-headers firewalld rmlint rebuild-detector p7zip unrar rar zip unzip
+sudo pacman -Syu --noconfirm network-manager-applet pavucontrol freecad steam
+sudo pacman -Syu --noconfirm grim slurp swappy hyprland-git
 yay -Syu --noconfirm --needed alacritty rider blender gimp libreoffice-still dropbox spotify ventoy-bin
 yay -Syu --noconfirm stm32cubemx hyprland-git
 yay -Syu --noconfirm teams debtap
@@ -451,10 +449,6 @@ yay -Syu --noconfirm waybar-git downgrade bibata-cursor-theme
 sudo pacman -Syu piper vulkan-tools wine-staging gamescope discord gamemode mangohud lutris steam
 yay -Syu --noconfirm xone-dkms
 
-EOF
-
-arch-chroot /mnt /bin/bash -e <<EOF
-
 # Check if NVIDIA GPU is found
 if lspci -k | grep -A 2 -E "(VGA|3D)" | grep -iq nvidia; then
 info_print "NVIDIA GPU FOUND! Installing nvidia-related packages!"  
@@ -462,8 +456,8 @@ yay -Syu --noconfirm --needed nvidia-dkms libva libva-nvidia-driver nvidia-utils
 sudo pacman -Syu steam
 
 info_print "Creating modprobe config for your Nvidia card for max performance and wayland support" 
-   mkdir -p /etc/modprobe.d >/dev/null
-   touch /etc/modprobe.d/nvidia.conf >/dev/null
+   sudo mkdir -p /etc/modprobe.d >/dev/null
+   sudo touch /etc/modprobe.d/nvidia.conf >/dev/null
    echo -e "\nMODULES=(btrfs nvidia nvidia_modeset nvidia_uvm nvidia_drm)" | sudo tee -a /etc/mkinitcpio.conf >/dev/null
    
    sudo tee /etc/modprobe.d/nvidia.conf > /dev/null <<'TXT'
@@ -474,7 +468,7 @@ info_print "Creating modprobe config for your Nvidia card for max performance an
    options nvidia NVreg_RegistryDwords="PowerMizerEnable=0x1; PerfLevelSrc=0x2222; PowerMizerLevel=0x3; PowerMizerDefault=0x3; PowerMizerDefaultAC=0x3"
 TXT
    
-   mkinitcpio -P
+   sudo mkinitcpio -P
 
    # Adding Pacman hook to update initramfs after Nvidia driver upgrade
 info_print "Creating Pacman hook to automatically update initramfs after every nvidia-driver upgrade" 
@@ -602,7 +596,6 @@ $HOME/.bashrc > /dev/null <<'TXT'
  source /usr/share/doc/pkgfile/command-not-found.bash
 TXT
 source ~/.bashrc
-EOF
 
 
 echo
