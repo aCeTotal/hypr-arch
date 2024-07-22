@@ -434,7 +434,6 @@ chown -R $username:$username /home/$username/.dotfiles
 gpasswd -a $username wheel input  >/dev/null
 
 info_print "Installing the rest of the packages."
-arch-chroot /mnt su - $username
 
 sudo pacman -Syu --noconfirm sddm nfs-utils qt5-wayland qt5ct wofi xdg-desktop-portal-hyprland qt6-wayland qt6ct qt5-svg qt5-quickcontrols2 qt5-graphicaleffects gtk3 polkit-gnome pipewire pipewire-pulse pipewire-jack jq network-manager-sstp sstp-client 
 sudo pacman -Syu --noconfirm swaybg github-cli wl-clipboard cliphist timeshift fail2ban swaybg ttf-jetbrains-mono-nerd papirus-icon-theme thunar
