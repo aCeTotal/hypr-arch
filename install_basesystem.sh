@@ -214,11 +214,14 @@ partprobe "$DISK"
 info_print "Formatting the EFI Partition as FAT32."
 mkfs.fat -F 32 "$ESP" &>/dev/null
 
+modprobe dm-crypt
+modprobe dm-mod
+
 # Creating a LUKS Container for the root partition.
 info_print "Creating LUKS Container for the root partition."
-echo -n "$password" | cryptsetup luksFormat "$CRYPTROOT" -d - &>/dev/null
-echo -n "$password" | cryptsetup open "$CRYPTROOT" cryptroot -d - 
-BTRFS="/dev/mapper/cryptroot"
+echo -n "$password" | cryptsetup luksFormat -v -s 512 -h sha512 "$CRYPTROOT" -
+echo -n "$password" | cryptsetup open "$CRYPTROOT" crypt-root - 
+BTRFS="/dev/mapper/crypt-root"
 
 # Formatting the LUKS Container as BTRFS.
 info_print "Formatting the LUKS container as BTRFS."
@@ -253,7 +256,7 @@ microcode_detector
 
 # Pacstrap (setting up a base sytem onto the new root).
 info_print "Installing the base packages (it may take a while)."
-pacstrap -K /mnt iwd base base-devel cryptsetup linux-zen "$microcode" linux-firmware linux-zen-headers git vim btrfs-progs xdg-user-dirs rsync efibootmgr snapper reflector snap-pac zram-generator sudo &>/dev/null
+pacstrap -K /mnt iwd base lvm2 base-devel cryptsetup linux-zen "$microcode" linux-firmware linux-zen-headers git vim btrfs-progs xdg-user-dirs rsync efibootmgr snapper reflector snap-pac zram-generator sudo &>/dev/null
 
 # Setting up the hostname.
 echo "$hostname" > /mnt/etc/hostname
@@ -281,7 +284,7 @@ network_installer
 # Configuring /etc/mkinitcpio.conf.
 info_print "Configuring /etc/mkinitcpio.conf."
 cat > /mnt/etc/mkinitcpio.conf <<EOF
-HOOKS=(base udev systemd autodetect sd-vconsole modconf block keyboard sd-encrypt filesystems fsck)
+HOOKS=(base udev systemd autodetect keymap modconf block keyboard encrypt lvm2 filesystems fsck)
 EOF
 
 # Configuring the system.
@@ -289,28 +292,28 @@ info_print "Configuring the system (timezone, system clock, initramfs, Snapper, 
 arch-chroot /mnt /bin/bash -e <<EOF
 
     # Setting up timezone.
-    ln -sf /usr/share/zoneinfo/$(curl -s http://ip-api.com/line?fields=timezone) /etc/localtime &>/dev/null
+    ln -sf /usr/share/zoneinfo/$(curl -s http://ip-api.com/line?fields=timezone) /etc/localtime
 
     # Setting up clock.
     hwclock --systohc
 
     # Generating locales.
-    locale-gen &>/dev/null
+    locale-gen
 
     # Generating a new initramfs.
-    mkinitcpio -P &>/dev/null
+    mkinitcpio -P
 
     # Snapper configuration.
     umount /.snapshots
     rm -r /.snapshots
     snapper --no-dbus -c root create-config /
-    btrfs subvolume delete /.snapshots &>/dev/null
+    btrfs subvolume delete /.snapshots
     mkdir /.snapshots
-    mount -a &>/dev/null
+    mount -a
     chmod 750 /.snapshots
 
     # Setting up systemd-boot.
-    bootctl --path=/boot install &>/dev/null 
+    bootctl --path=/boot install 
 
 EOF
 
@@ -331,7 +334,7 @@ cat > /mnt/boot/loader/entries/arch.conf <<EOF
 title   Arch Linux
 linux   /vmlinuz-linux-zen
 initrd  /initramfs-linux-zen.img
-options rd.luks.name=$PARTUUID=cryptroot root=/dev/mapper/cryptroot rootflags=subvol=@ rw
+options cryptdevice=$CRYPTROOT:crypt-root root=/dev/mapper/crypt-root rw
 EOF
 
 # Bekreft at filen er opprettet
@@ -341,10 +344,6 @@ else
   echo "Kunne ikke opprette konfigurasjonsfilen"
   exit 1
 fi
-
-cat > /mnt/etc/crypttab.initramfs <<EOF
-cryptroot UUID=$PARTUUID none luks
-EOF
 
 cat > /mnt/boot/loader/loader.conf <<EOF
 default arch
