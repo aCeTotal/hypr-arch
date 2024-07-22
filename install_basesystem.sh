@@ -331,7 +331,7 @@ cat > /mnt/boot/loader/entries/arch.conf <<EOF
 title   Arch Linux
 linux   /vmlinuz-linux-zen
 initrd  /initramfs-linux-zen.img
-options cryptdevice=PARTUUID=$PARTUUID:cryptroot root=$BTRFS rw
+options cryptdevice=PARTUUID=$PARTUUID:cryptroot root=$BTRFS rootflags=subvol=@ rw
 EOF
 
 # Bekreft at filen er opprettet
