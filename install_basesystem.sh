@@ -335,7 +335,7 @@ options rd.luks.name=$PARTUUID=cryptroot root=/dev/mapper/cryptroot rootflags=su
 EOF
 
 # Bekreft at filen er opprettet
-if [ -f /mnt/boot/loader/entries/hyprarch.conf ]; then
+if [ -f /mnt/boot/loader/entries/arch.conf ]; then
   echo "Konfigurasjonsfilen er opprettet med PARTUUID=$PARTUUID"
 else
   echo "Kunne ikke opprette konfigurasjonsfilen"
