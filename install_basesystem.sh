@@ -253,7 +253,7 @@ microcode_detector
 
 # Pacstrap (setting up a base sytem onto the new root).
 info_print "Installing the base packages (it may take a while)."
-pacstrap -K /mnt iwd base base-devel linux-zen "$microcode" linux-firmware linux-zen-headers git vim btrfs-progs xdg-user-dirs rsync efibootmgr snapper reflector snap-pac zram-generator sudo &>/dev/null
+pacstrap -K /mnt iwd base base-devel cryptsetup linux-zen "$microcode" linux-firmware linux-zen-headers git vim btrfs-progs xdg-user-dirs rsync efibootmgr snapper reflector snap-pac zram-generator sudo &>/dev/null
 
 # Setting up the hostname.
 echo "$hostname" > /mnt/etc/hostname
@@ -342,6 +342,15 @@ else
   exit 1
 fi
 
+cat > /mnt/etc/crypttab.initramfs <<EOF
+cryptroot UUID=$PARTUUID none luks
+EOF
+
+cat > /mnt/boot/loader/loader.conf <<EOF
+default arch
+timout 1
+editor 0
+EOF
 
 # Creating systemd pacman hook
 info_print "Creating systemd-boot pacman hook."
