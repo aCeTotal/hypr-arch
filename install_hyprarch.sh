@@ -232,7 +232,7 @@ for package in "${pacman_packages[@]}"; do
     success=false
 
     while [[ $attempt -le $max_attempts ]]; do
-        if sudo pacman -S --noconfirm "$package"; then
+        if sudo pacman -Syu --noconfirm --needed "$package"; then
             echo "Installert: $package" | tee -a "$log_file"
             success=true
             break
@@ -277,8 +277,10 @@ return 0
 
 setup_sddm () {
     info_print "Setting up SDDM."
+    sudo pacman -Syu sddm
     git clone https://github.com/ArtemSmaznov/SDDM-themes.git
     cd SDDM-themes
+    mkdir -p /usr/share/sddm/themes
     sudo cp -r deepin/ /usr/share/sddm/themes/
     sudo mkdir -p /etc/sddm.conf.d/
     sudo cp /usr/lib/sddm/sddm.conf.d/default.conf /etc/sddm.conf.d/default.conf
