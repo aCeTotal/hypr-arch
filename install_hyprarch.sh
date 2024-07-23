@@ -293,13 +293,13 @@ setup_sddm () {
 }
 
 setup_mousecursor () {
-    input_print "Changing the cursor theme to: Bibata-Modern-Ice"
-    sudo rm /usr/share/icons/default/index.theme
-    sudo touch /usr/share/icons/default/index.theme
-    sudo tee /usr/share/icons/default/index.theme > /dev/null <<'TXT'
-    [icon theme] 
-    Inherits=Bibata-Modern-Ice
-    TXT
+input_print "Changing the cursor theme to: Bibata-Modern-Ice"
+sudo rm /usr/share/icons/default/index.theme
+sudo touch /usr/share/icons/default/index.theme
+sudo tee /usr/share/icons/default/index.theme > /dev/null <<'TXT'
+[icon theme] 
+Inherits=Bibata-Modern-Ice
+TXT
 
     return 0
 }
