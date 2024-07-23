@@ -79,47 +79,47 @@ usergroups () {
 }
 
 nvidia_check () {
-    if lspci -k | grep -A 2 -E "(VGA|3D)" | grep -iq nvidia; then
-        info_print "NVIDIA GPU FOUND! Installing nvidia-related packages!"
-        sudo pacman -Syu --noconfirm --needed nvidia-dkms cuda libva-nvidia-driver nvidia-utils lib32-nvidia-utils
-        sudo pacman -Syu steam
+if lspci -k | grep -A 2 -E "(VGA|3D)" | grep -iq nvidia; then
+info_print "NVIDIA GPU FOUND! Installing nvidia-related packages!"
+sudo pacman -Syu --noconfirm --needed nvidia-dkms cuda libva-nvidia-driver nvidia-utils lib32-nvidia-utils
+sudo pacman -Syu steam
 
-        info_print "Creating modprobe config for your Nvidia card for max performance and wayland support" 
-        sudo mkdir -p /etc/modprobe.d >/dev/null
-        sudo touch /etc/modprobe.d/nvidia.conf >/dev/null
-        echo -e "" | sudo tee -a /etc/mkinitcpio.conf
-        echo -e "\nMODULES=(btrfs nvidia nvidia_modeset nvidia_uvm nvidia_drm)" | sudo tee -a /etc/mkinitcpio.conf >/dev/null
+info_print "Creating modprobe config for your Nvidia card for max performance and wayland support" 
+sudo mkdir -p /etc/modprobe.d >/dev/null
+sudo touch /etc/modprobe.d/nvidia.conf >/dev/null
+echo -e "" | sudo tee -a /etc/mkinitcpio.conf
+echo -e "\nMODULES=(btrfs nvidia nvidia_modeset nvidia_uvm nvidia_drm)" | sudo tee -a /etc/mkinitcpio.conf >/dev/null
    
-        sudo tee /etc/modprobe.d/nvidia.conf > /dev/null <<'TXT'
-        options nvidia-drm modeset=1
-        options nvidia NVreg_UsePageAttributeTable=1
-        options nvidia NVreg_EnablePCIeGen3=1
-        options nvidia NVreg_EnableResizableBar=1
-        options nvidia NVreg_RegistryDwords="PowerMizerEnable=0x1; PerfLevelSrc=0x2222; PowerMizerLevel=0x3; PowerMizerDefault=0x3; PowerMizerDefaultAC=0x3"
-        TXT
+sudo tee /etc/modprobe.d/nvidia.conf > /dev/null <<'TXT'
+options nvidia-drm modeset=1
+options nvidia NVreg_UsePageAttributeTable=1
+options nvidia NVreg_EnablePCIeGen3=1
+options nvidia NVreg_EnableResizableBar=1
+options nvidia NVreg_RegistryDwords="PowerMizerEnable=0x1; PerfLevelSrc=0x2222; PowerMizerLevel=0x3; PowerMizerDefault=0x3; PowerMizerDefaultAC=0x3"
+TXT
 
-        sudo mkinitcpio -P >/dev/null
+sudo mkinitcpio -P >/dev/null
 
-    # Adding Pacman hook to update initramfs after Nvidia driver upgrade
-    info_print "Creating Pacman hook to automatically update initramfs after every nvidia-driver upgrade" 
-    sudo tee /etc/pacman.d/hooks/nvidia.hook > /dev/null <<'TXT'
-    [Trigger]
-    Operation=Install
-    Operation=Upgrade
-    Operation=Remove
-    Type=Package
-    Target=nvidia-dkms
-    Target=linux-zen
+# Adding Pacman hook to update initramfs after Nvidia driver upgrade
+info_print "Creating Pacman hook to automatically update initramfs after every nvidia-driver upgrade" 
+sudo tee /etc/pacman.d/hooks/nvidia.hook > /dev/null <<'TXT'
+[Trigger]
+Operation=Install
+Operation=Upgrade
+Operation=Remove
+Type=Package
+Target=nvidia-dkms
+Target=linux-zen
 
-    [Action]
-    Description=Update NVIDIA module in initcpio
-    Depends=mkinitcpio
-    When=PostTransaction
-    NeedsTargets
-    Exec=/bin/sh -c 'while read -r trg; do case $trg in linux*) exit 0; esac; done; /usr/bin/mkinitcpio -P'
-    TXT
+[Action]
+Description=Update NVIDIA module in initcpio
+Depends=mkinitcpio
+When=PostTransaction
+NeedsTargets
+Exec=/bin/sh -c 'while read -r trg; do case $trg in linux*) exit 0; esac; done; /usr/bin/mkinitcpio -P'
+TXT
 
-    else
+else
         sudo pacman -Syu steam
         echo -e "" | sudo tee -a /etc/mkinitcpio.conf
         echo -e "\nMODULES=(btrfs)" | sudo tee -a /etc/mkinitcpio.conf >/dev/null
