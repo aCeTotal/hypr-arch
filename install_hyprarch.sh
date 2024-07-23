@@ -192,7 +192,6 @@ pacman_packages=(
     #Gaming
     "piper"
     "vulkan-tools"
-    "protontricks"
     "lutris"
     "mangohud"
     "gamemode"
@@ -210,10 +209,7 @@ aur_packages=(
     "bibata-cursor-theme"
     "stm32cubemx"
     #Gaming
-    "proton-ge-custom"
     "protontricks"
-    "wine-git"
-    "winetricks-git"
     "xone-dkms"
 
 
