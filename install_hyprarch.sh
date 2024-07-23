@@ -31,7 +31,6 @@ enabling_multilib () {
     sudo sed -i "/\[multilib\]/,/Include/"'s/^#//' /etc/pacman.conf
     sudo pacman -Syu --noconfirm
 
-    fi
     return 0
 }
 
@@ -42,7 +41,6 @@ install_yay () {
     makepkg -si --noconfirm
     cd && rm -rf ~/yay-git
         
-    fi
     return 0
 }
 
@@ -70,7 +68,6 @@ clone_dotfiles () {
         ln -sfn "$item" "$TARGET_DIR/$itemname"
     done
 
-    fi
     return 0
 }
 
@@ -78,7 +75,6 @@ usergroups () {
     info_print "Adding the $USER to the input group"
     sudo gpasswd -a $USER wheel input >/dev/null
 
-    fi
     return 0
 }
 
@@ -128,7 +124,6 @@ nvidia_check () {
         echo -e "" | sudo tee -a /etc/mkinitcpio.conf
         echo -e "\nMODULES=(btrfs)" | sudo tee -a /etc/mkinitcpio.conf >/dev/null
 
-    fi
     return 0
 }
 
@@ -281,8 +276,6 @@ done
 
 echo "Alle pakker er installert." | tee -a "$log_file"
 
-
-fi
 return 0
 }
 
@@ -296,7 +289,6 @@ setup_sddm () {
     sudo sed -i "s/^Current=/Current=deepin/g" /etc/sddm.conf.d/default.conf
     sudo systemctl enable sddm
 
-    fi
     return 0
 }
 
@@ -309,7 +301,6 @@ setup_mousecursor () {
     Inherits=Bibata-Modern-Ice
     TXT
 
-    fi 
     return 0
 }
 
