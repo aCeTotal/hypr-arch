@@ -59,13 +59,11 @@ clone_dotfiles () {
     if [ $? -ne 0 ]; then
          echo "The cloning failed!"
         exit 1
-    fi
 
     if [ -d "$TARGET_DIR" ]; then
         rm -rf "$TARGET_DIR"/*
     else
         mkdir -p "$TARGET_DIR"
-    fi
 
     for item in "$DOTFILES_DIR"/*; do
         itemname=$(basename "$item")
