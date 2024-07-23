@@ -1,6 +1,7 @@
 #!/usr/bin/env -S bash -e
 
-# Cleaning the TTY.
+pacman -Sy &>/dev/null
+pacman-key --init  &>/dev/null
 clear
 
 # Cosmetics (colours for text).
