@@ -144,18 +144,18 @@ keyboard_selector () {
 
 # Welcome screen.
 echo -ne "${BOLD}${BYELLOW}
-======================================================================
+===================================================================================================================================
 
-██╗  ██╗██╗   ██╗██████╗ ██████╗        █████╗ ██████╗  ██████╗██╗  ██╗
-██║  ██║╚██╗ ██╔╝██╔══██╗██╔══██╗      ██╔══██╗██╔══██╗██╔════╝██║  ██║
-███████║ ╚████╔╝ ██████╔╝██████╔╝█████╗███████║██████╔╝██║     ███████║
-██╔══██║  ╚██╔╝  ██╔═══╝ ██╔══██╗╚════╝██╔══██║██╔══██╗██║     ██╔══██║
-██║  ██║   ██║   ██║     ██║  ██║      ██║  ██║██║  ██║╚██████╗██║  ██║
-╚═╝  ╚═╝   ╚═╝   ╚═╝     ╚═╝  ╚═╝      ╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝
-                                                                       
-======================================================================
+ ██████╗ ██╗   ██╗██╗ ██████╗██╗  ██╗     █████╗ ██████╗  ██████╗██╗  ██╗    ██╗███╗   ██╗███████╗████████╗ █████╗ ██╗     ██╗     
+██╔═══██╗██║   ██║██║██╔════╝██║ ██╔╝    ██╔══██╗██╔══██╗██╔════╝██║  ██║    ██║████╗  ██║██╔════╝╚══██╔══╝██╔══██╗██║     ██║     
+██║   ██║██║   ██║██║██║     █████╔╝     ███████║██████╔╝██║     ███████║    ██║██╔██╗ ██║███████╗   ██║   ███████║██║     ██║     
+██║▄▄ ██║██║   ██║██║██║     ██╔═██╗     ██╔══██║██╔══██╗██║     ██╔══██║    ██║██║╚██╗██║╚════██║   ██║   ██╔══██║██║     ██║     
+╚██████╔╝╚██████╔╝██║╚██████╗██║  ██╗    ██║  ██║██║  ██║╚██████╗██║  ██║    ██║██║ ╚████║███████║   ██║   ██║  ██║███████╗███████╗
+ ╚══▀▀═╝  ╚═════╝ ╚═╝ ╚═════╝╚═╝  ╚═╝    ╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝    ╚═╝╚═╝  ╚═══╝╚══════╝   ╚═╝   ╚═╝  ╚═╝╚══════╝╚══════╝
+                                                                                                                                                                                                        
+===================================================================================================================================
 ${RESET}"
-info_print "Welcome to the installation of HyprArch. A system that attempts to make the world of bleeding-edge software more stable and as user-friendly as possible with the 'Arch way' of doing things."
+info_print "Welcome to a quick installation of Arch Linux!"
 echo
 # Choosing the target for the installation.
 info_print "Available disks for the installation:"
@@ -407,7 +407,13 @@ services=(reflector.timer snapper-timeline.timer snapper-cleanup.timer btrfs-scr
 for service in "${services[@]}"; do
     systemctl enable "$service" --root=/mnt &>/dev/null
 done
+umount -R /mnt
 echo
 echo
-info_print "The installation is complete! Please remove usb and type reboot!"
+info_print "The installation is complete! Please remove the usb and type reboot!"
+echo
+info_print "In the instructions on GitHub you will find scripts for installing an Desktop or HTPC environment, or you can do the rest manually from now on."
+echo
+info_print "Good Luck! =)"
 exit
+
