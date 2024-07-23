@@ -68,7 +68,7 @@ clone_dotfiles () {
         ln -sfn "$item" "$TARGET_DIR/$itemname"
     done
 
-    return 0
+    fi
 }
 
 usergroups () {
