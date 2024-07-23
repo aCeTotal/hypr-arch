@@ -123,7 +123,7 @@ else
         sudo pacman -Syu steam
         echo -e "" | sudo tee -a /etc/mkinitcpio.conf
         echo -e "\nMODULES=(btrfs)" | sudo tee -a /etc/mkinitcpio.conf >/dev/null
-
+    fi
     return 0
 }
 
