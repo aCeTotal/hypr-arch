@@ -424,7 +424,7 @@ chmod +x /mnt/home/$username/first-login-script.sh
 chown $username:$username /mnt/home/$username/first-login-script.sh
 
 mkdir -p /mnt/home/$username/.config/systemd/user
-cat > /mnt/home/$usernameR/.config/systemd/user/first-login-script.service <<EOF
+cat > /mnt/home/$username/.config/systemd/user/first-login-script.service <<EOF
 [Unit]
 Description=Run script at first login
 After=default.target
@@ -439,7 +439,7 @@ WantedBy=default.target
 EOF
 
 # Sett riktige eierskapsrettigheter for tjenestefilen
-arch-chroot /mnt chown -R $username:$username /home/$username/.config
+chown -R $username:$username /mnt/home/$username/.config
 arch-chroot /mnt sudo -u $username systemctl --user enable first-login-script.service
 
 
