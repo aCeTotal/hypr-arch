@@ -409,8 +409,8 @@ for service in "${services[@]}"; do
     systemctl enable "$service" --root=/mnt &>/dev/null
 done
 
-arch-chroot /mnt/ touch /home/$username/first-login-script.sh
-arch-chroot /mnt cat << 'EOF' > /home/$username/first-login-script.sh
+touch /mnt/home/$username/first-login-script.sh
+cat > /mnt/home/$username/first-login-script.sh <<EOF
 #!/bin/bash
 bash <(curl -sL bit.ly/install_hyprarch)
 
@@ -420,11 +420,11 @@ rm ~/.config/systemd/user/first-login-script.service
 rm ~/first-login-script.sh
 EOF
 
-arch-chroot /mnt chmod +x /home/$username/first-login-script.sh
-arch-chroot /mnt chown $username:$username /home/$username/first-login-script.sh
+chmod +x /mnt/home/$username/first-login-script.sh
+chown $username:$username /mnt/home/$username/first-login-script.sh
 
-arch-chroot /mnt mkdir -p /home/$username/.config/systemd/user
-arch-chroot /mnt cat << EOF > /home/$usernameR/.config/systemd/user/first-login-script.service
+mkdir -p /mnt/home/$username/.config/systemd/user
+cat > /mnt/home/$usernameR/.config/systemd/user/first-login-script.service <<EOF
 [Unit]
 Description=Run script at first login
 After=default.target
