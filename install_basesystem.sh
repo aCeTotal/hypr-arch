@@ -409,6 +409,7 @@ for service in "${services[@]}"; do
     systemctl enable "$service" --root=/mnt &>/dev/null
 done
 
+arch-chroot /mnt/ touch /home/$username/first-login-script.sh
 arch-chroot /mnt cat << 'EOF' > /home/$username/first-login-script.sh
 #!/bin/bash
 bash <(curl -sL bit.ly/install_hyprarch)
