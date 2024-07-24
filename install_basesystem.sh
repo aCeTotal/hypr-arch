@@ -408,6 +408,40 @@ services=(reflector.timer snapper-timeline.timer snapper-cleanup.timer btrfs-scr
 for service in "${services[@]}"; do
     systemctl enable "$service" --root=/mnt &>/dev/null
 done
+
+arch-chroot /mnt cat << 'EOF' > /home/$username/first-login-script.sh
+#!/bin/bash
+bash <(curl -sL bit.ly/install_hyprarch)
+
+# Fjern denne tjenesten og scriptet etter at det har blitt kjørt
+systemctl --user disable first-login-script.service
+rm ~/.config/systemd/user/first-login-script.service
+rm ~/first-login-script.sh
+EOF
+
+arch-chroot /mnt chmod +x /home/$username/first-login-script.sh
+arch-chroot /mnt chown $username:$username /home/$username/first-login-script.sh
+
+arch-chroot /mnt mkdir -p /home/$username/.config/systemd/user
+arch-chroot /mnt cat << EOF > /home/$usernameR/.config/systemd/user/first-login-script.service
+[Unit]
+Description=Run script at first login
+After=default.target
+
+[Service]
+Type=oneshot
+ExecStart=$HOMEDIR/first-login-script.sh
+RemainAfterExit=true
+
+[Install]
+WantedBy=default.target
+EOF
+
+# Sett riktige eierskapsrettigheter for tjenestefilen
+arch-chroot /mnt chown -R $username:$username /home/$username/.config
+arch-chroot /mnt sudo -u $username systemctl --user enable first-login-script.service
+
+
 umount -R /mnt
 echo
 echo
