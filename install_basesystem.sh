@@ -160,7 +160,7 @@ info_print "Welcome to a quick installation of Arch Linux!"
 echo
 # Choosing the target for the installation.
 info_print "Available disks for the installation:"
-lsblk -o NAME,SIZE,VENDOR,TYPE | awk '$4 == "disk" {print $1 " - " $2 ": (" $3 ")"}'
+lsblk -o NAME,SIZE,VENDOR,TYPE | awk '$4 == "disk|nvme" {print $1 " - " $2 ": (" $3 ")"}'
 echo
 PS3="Please select the number of the corresponding disk (e.g. 1): "
 select ENTRY in $(lsblk -dpnoNAME|grep -P "/dev/sd|nvme|vd");
@@ -335,17 +335,9 @@ initrd  /initramfs-linux-zen.img
 options cryptdevice=PARTUUID=$PARTUUID:cryptroot root=$BTRFS rootflags=subvol=@ rw
 EOF
 
-# Bekreft at filen er opprettet
-if [ -f /mnt/boot/loader/entries/arch.conf ]; then
-  echo "Konfigurasjonsfilen er opprettet med PARTUUID=$PARTUUID"
-else
-  echo "Kunne ikke opprette konfigurasjonsfilen"
-  exit 1
-fi
-
 cat > /mnt/boot/loader/loader.conf <<EOF
 default arch
-timout 5
+timout 1
 EOF
 
 # Creating systemd pacman hook
@@ -408,39 +400,6 @@ services=(reflector.timer snapper-timeline.timer snapper-cleanup.timer btrfs-scr
 for service in "${services[@]}"; do
     systemctl enable "$service" --root=/mnt &>/dev/null
 done
-
-touch /mnt/home/$username/first-login-script.sh
-cat > /mnt/home/$username/first-login-script.sh <<EOF
-#!/bin/bash
-bash <(curl -sL bit.ly/install_hyprarch)
-
-# Fjern denne tjenesten og scriptet etter at det har blitt kjørt
-systemctl --user disable first-login-script.service
-rm ~/.config/systemd/user/first-login-script.service
-rm ~/first-login-script.sh
-EOF
-
-chmod +x /mnt/home/$username/first-login-script.sh
-chown $username:$username /mnt/home/$username/first-login-script.sh
-
-mkdir -p /mnt/home/$username/.config/systemd/user
-cat > /mnt/home/$username/.config/systemd/user/first-login-script.service <<EOF
-[Unit]
-Description=Run script at first login
-After=default.target
-
-[Service]
-Type=oneshot
-ExecStart=$HOMEDIR/first-login-script.sh
-RemainAfterExit=true
-
-[Install]
-WantedBy=default.target
-EOF
-
-# Sett riktige eierskapsrettigheter for tjenestefilen
-chown -R $username:$username /mnt/home/$username/.config
-arch-chroot /mnt sudo -u $username systemctl --user enable first-login-script.service
 
 
 umount -R /mnt
