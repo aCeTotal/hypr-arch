@@ -144,6 +144,7 @@ pacman_packages=(
     "xorg-xwayland"
     "hyprland"
     "swaybg"
+    "wl-clipboard"
     "waybar"
     "rofi-wayland"
     "alacritty"
