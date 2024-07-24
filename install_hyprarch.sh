@@ -212,8 +212,6 @@ aur_packages=(
     #Gaming
     "protontricks"
     "xone-dkms"
-
-
 )
 
 # Oppdater systemet med pacman
@@ -276,17 +274,15 @@ echo "Alle pakker er installert." | tee -a "$log_file"
 return 0
 }
 
-setup_sddm () {
-    info_print "Setting up SDDM."
-    sudo pacman -Syu sddm
-    git clone https://github.com/ArtemSmaznov/SDDM-themes.git
-    cd SDDM-themes
-    mkdir -p /usr/share/sddm/themes
-    sudo cp -r deepin/ /usr/share/sddm/themes/
-    sudo mkdir -p /etc/sddm.conf.d/
-    sudo cp /usr/lib/sddm/sddm.conf.d/default.conf /etc/sddm.conf.d/default.conf
-    sudo sed -i "s/^Current=/Current=deepin/g" /etc/sddm.conf.d/default.conf
-    sudo systemctl enable sddm
+setup_ly () {
+    info_print "Installing Ly - display manager."
+    #git clone https://github.com/fairyglade/ly
+    #cd ly
+    #zig build
+    #zig build installsystemd
+    sudo pacman -Syu ly
+    sudo systemctl enable ly.service
+    #sudo systemctl disable getty@tty2.service
 
     return 0
 }

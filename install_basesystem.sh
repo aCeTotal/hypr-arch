@@ -160,7 +160,7 @@ info_print "Welcome to a quick installation of Arch Linux!"
 echo
 # Choosing the target for the installation.
 info_print "Available disks for the installation:"
-lsblk -o NAME,SIZE,VENDOR,TYPE | awk '$4 == "disk|nvme" {print $1 " - " $2 ": (" $3 ")"}'
+lsblk -o NAME,SIZE,VENDOR,TYPE | awk '$4 == "disk" {print $1 " - " $2 ": (" $3 ")"}'
 echo
 PS3="Please select the number of the corresponding disk (e.g. 1): "
 select ENTRY in $(lsblk -dpnoNAME|grep -P "/dev/sd|nvme|vd");
@@ -254,7 +254,7 @@ microcode_detector
 
 # Pacstrap (setting up a base sytem onto the new root).
 info_print "Installing the base packages (it may take a while)."
-pacstrap -K /mnt iwd base base-devel cryptsetup linux-zen "$microcode" linux-firmware linux-zen-headers git vim btrfs-progs xdg-user-dirs rsync efibootmgr snapper reflector snap-pac zram-generator sudo &>/dev/null
+pacstrap -K /mnt iwd base base-devel zig linux-zen "$microcode" linux-firmware linux-zen-headers git vim btrfs-progs xdg-user-dirs rsync efibootmgr snapper reflector snap-pac zram-generator sudo &>/dev/null
 
 # Setting up the hostname.
 echo "$hostname" > /mnt/etc/hostname
