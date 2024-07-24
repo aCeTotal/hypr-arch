@@ -82,7 +82,7 @@ nvidia_check () {
 if lspci -k | grep -A 2 -E "(VGA|3D)" | grep -iq nvidia; then
 info_print "NVIDIA GPU FOUND! Installing nvidia-related packages!"
 sudo pacman -Syu --noconfirm --needed nvidia-dkms cuda libva-nvidia-driver nvidia-utils lib32-nvidia-utils
-sudo pacman -Syu steam
+sudo pacman -Syu steam --noconfirm
 
 info_print "Creating modprobe config for your Nvidia card for max performance and wayland support" 
 sudo mkdir -p /etc/modprobe.d >/dev/null
@@ -120,7 +120,7 @@ Exec=/bin/sh -c 'while read -r trg; do case $trg in linux*) exit 0; esac; done; 
 TXT
 
 else
-        sudo pacman -Syu steam
+        sudo pacman -Syu steam --noconfirm
         echo -e "" | sudo tee -a /etc/mkinitcpio.conf
         echo -e "\nMODULES=(btrfs)" | sudo tee -a /etc/mkinitcpio.conf >/dev/null
     fi
@@ -131,7 +131,7 @@ else
 installing_packages () {
 info_print "Installing all the packages that we need."
 
-sudo pacman -Sy </dev/null
+sudo pacman -Sy --noconfirm </dev/null
 
 # Fil for logging
 log_file="install_log.txt"
@@ -143,6 +143,7 @@ pacman_packages=(
     "rsync"
     "xorg-xwayland"
     "hyprland"
+    "swaybg"
     "waybar"
     "rofi-wayland"
     "alacritty"
@@ -151,7 +152,6 @@ pacman_packages=(
     "xdg-desktop-portal-hyprland"
     "qt5-wayland"
     "qt6-wayland"
-    "hyprpaper"
     "hyprlock"
     "firefox"
     "ttf-font-awesome"
@@ -188,8 +188,6 @@ pacman_packages=(
     "blender"
     "gimp"
     "libreoffice-still"
-    "spotify"
-    "ventoy-bin"
     #Gaming
     "piper"
     "vulkan-tools"
@@ -206,17 +204,16 @@ pacman_packages=(
 aur_packages=(
     "brave-bin"
     "debtap"
-    "teams"
+    "spotify"
+    "ventoy-bin"
     "bibata-cursor-theme"
-    "stm32cubemx"
+    "grimblast-git"
     #Gaming
-    "protontricks"
-    "xone-dkms"
 )
 
 # Oppdater systemet med pacman
 echo "Oppdaterer systemet med pacman..." | tee -a "$log_file"
-if sudo pacman -Syu --noconfirm; then
+if sudo pacman -Syu --noconfirm --needed; then
     echo "System oppdatert med pacman" | tee -a "$log_file"
 else
     echo "Feil ved oppdatering av systemet med pacman" | tee -a "$log_file"
@@ -254,7 +251,7 @@ for package in "${aur_packages[@]}"; do
     success=false
 
     while [[ $attempt -le $max_attempts ]]; do
-        if yay -S --noconfirm "$package"; then
+        if yay -Syu --noconfirm "$package"; then
             echo "Installert: $package" | tee -a "$log_file"
             success=true
             break
@@ -276,13 +273,8 @@ return 0
 
 setup_ly () {
     info_print "Installing Ly - display manager."
-    #git clone https://github.com/fairyglade/ly
-    #cd ly
-    #zig build
-    #zig build installsystemd
-    sudo pacman -Syu ly
+    sudo pacman -Syu ly --noconfirm
     sudo systemctl enable ly.service
-    #sudo systemctl disable getty@tty2.service
 
     return 0
 }
@@ -306,6 +298,6 @@ until clone_dotfiles; do : ; done
 until usergroups; do : ; done
 until nvidia_check; do : ; done
 until installing_packages; do : ; done
-until setup_sddm; do : ; done
+until setup_ly; do : ; done
 until setup_mousecursor; do : ; done
 
