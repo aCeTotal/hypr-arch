@@ -287,7 +287,7 @@ check_if_laptop () {
         yes | yay -Syu msi-perkeyrgb tlpui --noconfirm
         yes | yay -Syu isw --noconfirm
         yes | sudo pacman -Syu tlp --noconfirm --needed
-    fi
+fi
 
             
 # Opprett systemd-tjenestefilen direkte med sudo
@@ -311,9 +311,6 @@ sudo systemctl start ec-config.service
 sudo systemctl enable tlp.service
 sudo systemctl start tlp.service
 
-return 0;
-else
-    return 0;
 }
 
 
