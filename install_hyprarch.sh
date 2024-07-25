@@ -28,14 +28,6 @@ error_print () {
     echo -e "${BOLD}${BRED}[ ${BBLUE}•${BRED} ] $1${RESET}"
 }
 
-enabling_multilib () {
-    info_print "Enabling multilib."
-    sudo sed -i "/\[multilib\]/,/Include/"'s/^#//' /etc/pacman.conf &>/dev/null
-    sudo pacman -Syu --noconfirm &>/dev/null
-
-    return 0
-}
-
 install_yay () {
     info_print "Installing the AUR-helper - Yay."
     git clone https://aur.archlinux.org/yay-git.git ~/yay-git &>/dev/null
@@ -45,6 +37,17 @@ install_yay () {
         
     return 0
 }
+
+enabling_multilib () {
+    info_print "Enabling multilib."
+    sudo sed -i "/\[multilib\]/,/Include/"'s/^#//' /etc/pacman.conf &>/dev/null
+    sudo pacman -Syu --noconfirm &>/dev/null
+
+    return 0
+}
+
+
+
 
 clone_dotfiles () {
     info_print "Cloning the dotfiles and adding symbolic links."
@@ -83,8 +86,7 @@ usergroups () {
 nvidia_check () {
 if lspci -k | grep -A 2 -E "(VGA|3D)" | grep -iq nvidia; then
 info_print "NVIDIA GPU FOUND! Installing nvidia-related packages!"
-sudo pacman -Syu --noconfirm --needed nvidia-dkms cuda libva-nvidia-driver nvidia-utils lib32-nvidia-utils
-sudo pacman -Syu steam --noconfirm
+sudo pacman -Syu --noconfirm --needed nvidia-dkms cuda libva-nvidia-driver nvidia-utils lib32-nvidia-utils &>/dev/null
 
 info_print "Creating modprobe config for your Nvidia card for max performance and wayland support" 
 sudo mkdir -p /etc/modprobe.d >/dev/null
@@ -122,8 +124,7 @@ Exec=/bin/sh -c 'while read -r trg; do case $trg in linux*) exit 0; esac; done; 
 TXT
 
 else
-        sudo pacman -Syu steam --noconfirm
-        echo -e "" | sudo tee -a /etc/mkinitcpio.conf
+        echo -e "" | sudo tee -a /etc/mkinitcpio.conf &>/dev/null
         echo -e "\nMODULES=(btrfs)" | sudo tee -a /etc/mkinitcpio.conf >/dev/null
     fi
     return 0
@@ -181,7 +182,6 @@ pacman_packages=(
     "firewalld"
     "p7zip"
     "unrar"
-    "rar"
     "zip"
     "unzip"
     "pavucontrol"
@@ -215,7 +215,7 @@ aur_packages=(
 
 # Oppdater systemet med pacman
 echo "Oppdaterer systemet med pacman..." | tee -a "$log_file"
-if sudo pacman -Syu --noconfirm --needed; then
+if yes | sudo pacman -Syu --noconfirm --needed; then
     echo "System oppdatert med pacman" | tee -a "$log_file"
 else
     echo "Feil ved oppdatering av systemet med pacman" | tee -a "$log_file"
@@ -224,13 +224,13 @@ fi
 
 # Installer pacman-pakker
 echo "Installerer pacman-pakker..." | tee -a "$log_file"
-for package in "${pacman_packages[@]}"; do
+for package in "${pacman_packages[@]}"; do &>/dev/null
     attempt=1
     max_attempts=3
     success=false
 
     while [[ $attempt -le $max_attempts ]]; do
-        if sudo pacman -Syu --noconfirm --needed "$package"; then
+        if yes | sudo pacman -Syu --noconfirm --needed "$package"; then
             echo "Installert: $package" | tee -a "$log_file"
             success=true
             break
@@ -253,7 +253,7 @@ for package in "${aur_packages[@]}"; do
     success=false
 
     while [[ $attempt -le $max_attempts ]]; do
-        if yay -Syu --noconfirm "$package"; then
+        if yay -Syu --noconfirm "$package"; then &>/dev/null
             echo "Installert: $package" | tee -a "$log_file"
             success=true
             break
@@ -275,8 +275,9 @@ return 0
 
 setup_ly () {
     info_print "Installing Ly - display manager."
-    sudo pacman -Syu ly --noconfirm
-    sudo systemctl enable ly.service
+    sudo pacman -Syu ly --noconfirm &>/dev/null
+
+    sudo systemctl enable ly.service &>/dev/null
 
     return 0
 }
@@ -285,7 +286,7 @@ setup_mousecursor () {
 input_print "Changing the cursor theme to: Bibata-Modern-Ice"
 sudo rm /usr/share/icons/default/index.theme
 sudo touch /usr/share/icons/default/index.theme
-sudo tee /usr/share/icons/default/index.theme > /dev/null <<'TXT'
+sudo tee /usr/share/icons/default/index.theme > /dev/null <<'TXT' &>/dev/null
 [icon theme] 
 Inherits=Bibata-Modern-Ice
 TXT
@@ -297,6 +298,7 @@ start_services () {
     info_print "Starting services"
     sudo systemctl enable pipewire-pulse.service
 
+    return 0
 }
 
 
