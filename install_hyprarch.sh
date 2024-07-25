@@ -123,8 +123,6 @@ TXT
 installing_packages () {
     info_print "Installing all the packages! (This may take some time)."
 
-    sudo pacman -Sy --noconfirm &>/dev/null
-
     # Fil for logging
     log_file="install_log.txt"
 
