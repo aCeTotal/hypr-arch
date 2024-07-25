@@ -1,6 +1,8 @@
 #!/usr/bin/env -S bash -e
 
 # Cleaning the TTY.
+pacman -Sy &>/dev/null
+pacman-key --init  &>/dev/null
 clear
 
 # Cosmetics (colours for text).
@@ -28,18 +30,18 @@ error_print () {
 
 enabling_multilib () {
     info_print "Enabling multilib."
-    sudo sed -i "/\[multilib\]/,/Include/"'s/^#//' /etc/pacman.conf
-    sudo pacman -Syu --noconfirm
+    sudo sed -i "/\[multilib\]/,/Include/"'s/^#//' /etc/pacman.conf &>/dev/null
+    sudo pacman -Syu --noconfirm &>/dev/null
 
     return 0
 }
 
 install_yay () {
     info_print "Installing the AUR-helper - Yay."
-    git clone https://aur.archlinux.org/yay-git.git ~/yay-git
-    cd ~/yay-git
-    makepkg -si --noconfirm
-    cd && rm -rf ~/yay-git
+    git clone https://aur.archlinux.org/yay-git.git ~/yay-git &>/dev/null
+    cd ~/yay-git &>/dev/null
+    makepkg -si --noconfirm &>/dev/null
+    cd && rm -rf ~/yay-git &>/dev/null
         
     return 0
 }
@@ -171,12 +173,11 @@ pacman_packages=(
     "python-gobject"
     "nfs-utils"
     "pipewire"
+    "pipewire-jack"
+    "pipewire-pulse"
     "wireplumber"
     "network-manager-sstp"
     "sstp-client"
-    "grim"
-    "slurp"
-    "swappy"
     "firewalld"
     "p7zip"
     "unrar"
@@ -292,6 +293,12 @@ TXT
     return 0
 }
 
+start_services () {
+    info_print "Starting services"
+    sudo systemctl enable pipewire-pulse.service
+
+}
+
 
 until enabling_multilib; do : ; done
 until install_yay; do : ; done
@@ -301,4 +308,7 @@ until nvidia_check; do : ; done
 until installing_packages; do : ; done
 until setup_ly; do : ; done
 until setup_mousecursor; do : ; done
+until start_services; do : ; done
+
+systemctl reboot
 
