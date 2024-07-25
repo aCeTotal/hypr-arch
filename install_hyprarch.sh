@@ -124,7 +124,6 @@ installing_packages () {
     info_print "Installing all the packages! (This may take some time)."
 
     sudo pacman -Sy --noconfirm &>/dev/null
-    sudo pacman -R --noconfirm jack2 
 
     # Fil for logging
     log_file="install_log.txt"
@@ -164,7 +163,6 @@ installing_packages () {
         "python-gobject"
         "nfs-utils"
         "pipewire"
-        "pipewire-jack"
         "pipewire-pulse"
         "wireplumber"
         "network-manager-sstp"
