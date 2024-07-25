@@ -70,8 +70,9 @@ clone_dotfiles () {
 }
 
 usergroups () {
-    info_print "Adding the $USER to the input group"
+    info_print "Adding user $USER to the input group"
     sudo gpasswd -a $USER wheel input &>/dev/null
+    return 0;
 }
 
 nvidia_check () {
