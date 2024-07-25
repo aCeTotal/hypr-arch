@@ -332,7 +332,7 @@ cat > /mnt/boot/loader/entries/arch.conf <<EOF
 title   Arch Linux
 linux   /vmlinuz-linux-zen
 initrd  /initramfs-linux-zen.img
-options cryptdevice=PARTUUID=$PARTUUID:cryptroot root=$BTRFS rootflags=subvol=@ rw quiet loglevel=3 systemd.show_status=auto rd.udev.log_level=3
+options cryptdevice=PARTUUID=$PARTUUID:cryptroot root=$BTRFS rootflags=subvol=@ rw quiet loglevel=3
 EOF
 
 cat > /mnt/boot/loader/loader.conf <<EOF
