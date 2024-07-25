@@ -1,8 +1,8 @@
 #!/usr/bin/env -S bash -e
 
 # Cleaning the TTY.
-pacman -Sy &>/dev/null
-pacman-key --init  &>/dev/null
+sudo pacman -Sy &>/dev/null
+sudo pacman-key --init  &>/dev/null
 clear
 
 # Cosmetics (colours for text).
@@ -43,7 +43,7 @@ enabling_multilib () {
 }
 
 clone_dotfiles () {
-    info_print "Cloning the dotfiles and adding symbolic links."
+    info_print "Cloning the dotfiles and creating symbolic links."
 
     REPO_URL="https://github.com/aCeTotal/arch_dotfiles.git"
     CLONE_DIR="$HOME/.dotrepo"
@@ -77,10 +77,10 @@ usergroups () {
 
 nvidia_check () {
     if lspci -k | grep -A 2 -E "(VGA|3D)" | grep -iq nvidia; then
-        info_print "NVIDIA GPU FOUND! Installing nvidia-related packages!"
+        info_print "NVIDIA GPU FOUND! Installing nvidia-related packages."
         sudo pacman -Syu --noconfirm --needed nvidia-dkms cuda libva-nvidia-driver nvidia-utils lib32-nvidia-utils &>/dev/null
 
-        info_print "Creating modprobe config for your Nvidia card for max performance and wayland support" 
+        info_print "Creating modprobe config for your Nvidia card for max performance and wayland support." 
         sudo mkdir -p /etc/modprobe.d &>/dev/null
         sudo touch /etc/modprobe.d/nvidia.conf &>/dev/null
         echo -e "" | sudo tee -a /etc/mkinitcpio.conf
@@ -121,9 +121,10 @@ TXT
 }
 
 installing_packages () {
-    info_print "Installing all the packages that we need."
+    info_print "Installing all the packages! (This may take some time)."
 
     sudo pacman -Sy --noconfirm &>/dev/null
+    sudo pacman -R --noconfirm jack2 
 
     # Fil for logging
     log_file="install_log.txt"
@@ -202,57 +203,57 @@ installing_packages () {
     )
 
     # Oppdater systemet med pacman
-    echo "Oppdaterer systemet med pacman..." | tee -a "$log_file"
+    echo "Oppdaterer systemet med pacman..." | tee -a "$log_file" &>/dev/null
     if yes | sudo pacman -Syu --noconfirm --needed &>/dev/null; then
-        echo "System oppdatert med pacman" | tee -a "$log_file"
+        echo "System oppdatert med pacman" | tee -a "$log_file" &>/dev/null
     else
-        echo "Feil ved oppdatering av systemet med pacman" | tee -a "$log_file"
-        exit 1
+        echo "Feil ved oppdatering av systemet med pacman" | tee -a "$log_file" &>/dev/null 
+        exit 1 &>/dev/null
     fi
 
     # Installer pacman-pakker
-    echo "Installerer pacman-pakker..." | tee -a "$log_file"
-    for package in "${pacman_packages[@]}"; do
+    echo "Installerer pacman-pakker..." | tee -a "$log_file" &>/dev/null
+    for package in "${pacman_packages[@]}"; do &>/dev/null
         attempt=1
         max_attempts=3
         success=false
 
         while [[ $attempt -le $max_attempts ]]; do
             if yes | sudo pacman -Syu --noconfirm --needed "$package" &>/dev/null; then
-                echo "Installert: $package" | tee -a "$log_file"
+                echo "Installert: $package" | tee -a "$log_file" &>/dev/null
                 success=true
                 break
             else
-                echo "Feil ved installasjon av $package, forsøk $attempt" | tee -a "$log_file"
+                echo "Feil ved installasjon av $package, forsøk $attempt" | tee -a "$log_file" &>/dev/null
             fi
             ((attempt++))
         done
 
         if [[ $success == false ]]; then
-            echo "Mislyktes å installere $package etter $max_attempts forsøk" | tee -a "$log_file"
+            echo "Mislyktes å installere $package etter $max_attempts forsøk" | tee -a "$log_file" &>/dev/null
         fi
     done
 
     # Installer AUR-pakker
-    echo "Installerer AUR-pakker..." | tee -a "$log_file"
-    for package in "${aur_packages[@]}"; do
+    echo "Installerer AUR-pakker..." | tee -a "$log_file" &>/dev/null
+    for package in "${aur_packages[@]}"; do &>/dev/null
         attempt=1
         max_attempts=3
         success=false
 
-        while [[ $attempt -le $max_attempts ]]; do
+        while [[ $attempt -le $max_attempts ]]; do &>/dev/null
             if yay -Syu --noconfirm "$package" &>/dev/null; then
-                echo "Installert: $package" | tee -a "$log_file"
+                echo "Installert: $package" | tee -a "$log_file" &>/dev/null
                 success=true
                 break
             else
-                echo "Feil ved installasjon av $package, forsøk $attempt" | tee -a "$log_file"
+                echo "Feil ved installasjon av $package, forsøk $attempt" | tee -a "$log_file" &>/dev/null
             fi
             ((attempt++))
         done
 
-        if [[ $success == false ]]; then
-            echo "Mislyktes å installere $package etter $max_attempts forsøk" | tee -a "$log_file"
+        if [[ $success == false ]]; then &>/dev/null
+            echo "Mislyktes å installere $package etter $max_attempts forsøk" | tee -a "$log_file" &>/dev/null
         fi
     done
 
@@ -285,9 +286,9 @@ check_if_laptop () {
     if acpi -b | grep -i "Battery" &>/dev/null; then
         info_print "This is a laptop. Laptop specific packages and settings will be installed. WARNING: This script is most likely adapted to one or more types of laptop, so you should look up your laptop in the Arch Wiki to manually do the recommended steps!"
         #MSI GS66 Stealth
-        yes | yay -Syu msi-perkeyrgb tlpui --noconfirm
-        yes | yay -Syu isw --noconfirm
-        yes | sudo pacman -Syu tlp --noconfirm --needed
+        yay -Syu msi-perkeyrgb tlpui --noconfirm &>/dev/null
+        yay -Syu isw --noconfirm &>/dev/null
+        sudo pacman -Syu tlp hdparm iw --noconfirm --needed &>/dev/null
 fi
 
             
@@ -306,12 +307,13 @@ RemainAfterExit=true
 WantedBy=multi-user.target
 EOF
 
-sudo systemctl daemon-reload
-sudo systemctl enable ec-config.service
-sudo systemctl start ec-config.service
-sudo systemctl enable tlp.service
-sudo systemctl start tlp.service
+sudo systemctl daemon-reload &>/dev/null
+sudo systemctl enable ec-config.service &>/dev/null
+sudo systemctl start ec-config.service &>/dev/null
+sudo systemctl enable tlp.service &>/dev/null
+sudo systemctl start tlp.service &>/dev/null
 
+return 0;
 }
 
 
