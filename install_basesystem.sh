@@ -282,7 +282,7 @@ network_installer
 # Configuring /etc/mkinitcpio.conf.
 info_print "Configuring /etc/mkinitcpio.conf."
 cat > /mnt/etc/mkinitcpio.conf <<EOF
-HOOKS=(base systemd autodetect microcode keymap modconf block keyboard encrypt filesystems fsck)
+HOOKS=(base systemd autodetect microcode keymap modconf block keyboard encrypt filesystems)
 EOF
 
 # Configuring the system.
