@@ -189,6 +189,7 @@ pacman_packages=(
     "freecad"
     "blender"
     "gimp"
+    "steam"
     "libreoffice-still"
     #Gaming
     "piper"
