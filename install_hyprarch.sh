@@ -348,8 +348,8 @@ until install_yay; do : ; done
 until clone_dotfiles; do : ; done 
 until usergroups; do : ; done
 until nvidia_check; do : ; done
-until intel_check; do : ; done
-until amd_check; do : ; done
+#until intel_check; do : ; done
+#until amd_check; do : ; done
 until installing_packages; do : ; done
 until setup_ly; do : ; done
 until setup_mousecursor; do : ; done
