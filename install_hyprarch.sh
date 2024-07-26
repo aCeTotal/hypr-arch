@@ -184,6 +184,7 @@ installing_packages () {
         "ttf-jetbrains-mono-nerd"
         "papirus-icon-theme"
         "fuse2"
+        "htop"
         "gtk4"
         "libadwaita"
         "jq"
