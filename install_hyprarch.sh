@@ -114,11 +114,40 @@ NeedsTargets
 Exec=/bin/sh -c 'while read -r trg; do case $trg in linux*) exit 0; esac; done; /usr/bin/mkinitcpio -P'
 TXT
 
-    else
-        echo -e "" | sudo tee -a /etc/mkinitcpio.conf &>/dev/null
-        echo -e "\nMODULES=(btrfs)" | sudo tee -a /etc/mkinitcpio.conf &>/dev/null
+info_print "Enabling Nvidia raytracing"
+echo "#Nvidia variables:"
+echo "VKD3D_CONFIG=dxr11,dxr" | sudo tee -a "/etc/environment" > /dev/null
+echo "PROTON_ENABLE_NVAPI=1" | sudo tee -a "/etc/environment" > /dev/null
+echo "PROTON_ENABLE_NGX_UPDATER=1" | sudo tee -a "/etc/environment" > /dev/null
     fi
 }
+
+intel_check () {
+    if lspci -k | grep -A 2 -E "(VGA|3D)" | grep -iq intel; then
+        info_print "Intel GPU FOUND! Installing Intel-related packages."
+
+        echo -e "" | sudo tee -a /etc/mkinitcpio.conf &>/dev/null
+        echo -e "\nMODULES=(btrfs intel)" | sudo tee -a /etc/mkinitcpio.conf &>/dev/null
+        sudo pacman -Syu mesa lib32-mesa vulkan-intel --noconfirm --needed
+        info_print "Enabling Intel-raytracing support!"
+        echo "#Intel Variables" | sudo tee -a "/etc/environment" > /dev/null
+        echo "VKD3D_CONFIG=dxr11,dxr" | sudo tee -a "/etc/environment" > /dev/null
+    fi
+}
+
+amd_check () {
+    if lspci -k | grep -A 2 -E "(VGA|3D)" | grep -iq amd; then
+        info_print "AMD GPU FOUND! Installing AMD-related packages."
+
+        echo -e "" | sudo tee -a /etc/mkinitcpio.conf &>/dev/null
+        echo -e "\nMODULES=(btrfs amd)" | sudo tee -a /etc/mkinitcpio.conf &>/dev/null
+        sudo pacman -Syu mesa lib32-mesa vulkan-radeon --noconfirm --needed
+        info_print "Enabling AMD-raytracing support!"
+        echo "#AMD Variables" | sudo tee -a "/etc/environment" > /dev/null
+        echo "RADV_PERFTEST='rt'" | sudo tee -a "/etc/environment" > /dev/null
+    fi
+}
+
 
 installing_packages () {
     info_print "Installing all the packages! (This may take some time)."
@@ -318,6 +347,8 @@ until install_yay; do : ; done
 until clone_dotfiles; do : ; done 
 until usergroups; do : ; done
 until nvidia_check; do : ; done
+until intel_check; do : ; done
+until amd_check; do : ; done
 until installing_packages; do : ; done
 until setup_ly; do : ; done
 until setup_mousecursor; do : ; done
