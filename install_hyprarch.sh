@@ -119,6 +119,12 @@ echo "#Nvidia variables:"
 echo "VKD3D_CONFIG=dxr11,dxr" | sudo tee -a "/etc/environment" > /dev/null
 echo "PROTON_ENABLE_NVAPI=1" | sudo tee -a "/etc/environment" > /dev/null
 echo "PROTON_ENABLE_NGX_UPDATER=1" | sudo tee -a "/etc/environment" > /dev/null
+
+echo -e "#NVIDIA" | sudo tee -a $HOME/.dotrepo/dotfiles/hypr/conf/autostart.conf &>/dev/null
+echo -e "exec-once = dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP" | sudo tee -a $HOME/.dotrepo/dotfiles/hypr/conf/autostart.conf &>/dev/null
+echo -e "exec-once = systemctl --user import-environment WAYLAND_DISPLAY XDG_CURRENT_DESKTOP" | sudo tee -a $HOME/.dotrepo/dotfiles/hypr/conf/autostart.conf &>/dev/null
+echo -e "env = WLR_NO_HARDWARE_CURSORS,1" | sudo tee -a $HOME/.dotrepo/dotfiles/hypr/conf/autostart.conf &>/dev/null
+echo -e "env = LIBVA_DRIVER_NAME,nvidia" | sudo tee -a $HOME/.dotrepo/dotfiles/hypr/conf/autostart.conf &>/dev/null
     fi
 }
 
