@@ -87,7 +87,7 @@ nvidia_check () {
         echo -e "\nMODULES=(btrfs nvidia nvidia_modeset nvidia_uvm nvidia_drm)" | sudo tee -a /etc/mkinitcpio.conf &>/dev/null
 
         sudo tee /etc/modprobe.d/nvidia.conf > /dev/null <<'TXT'
-options nvidia-drm modeset=1
+options nvidia_drm modeset=1 fbdev=1
 options nvidia NVreg_UsePageAttributeTable=1
 options nvidia NVreg_EnablePCIeGen3=1
 options nvidia NVreg_EnableResizableBar=1
@@ -123,8 +123,15 @@ echo "PROTON_ENABLE_NGX_UPDATER=1" | sudo tee -a "/etc/environment" > /dev/null
 echo -e "#NVIDIA" | sudo tee -a $HOME/.dotrepo/dotfiles/hypr/conf/autostart.conf &>/dev/null
 echo -e "exec-once = dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP" | sudo tee -a $HOME/.dotrepo/dotfiles/hypr/conf/autostart.conf &>/dev/null
 echo -e "exec-once = systemctl --user import-environment WAYLAND_DISPLAY XDG_CURRENT_DESKTOP" | sudo tee -a $HOME/.dotrepo/dotfiles/hypr/conf/autostart.conf &>/dev/null
-echo -e "env = WLR_NO_HARDWARE_CURSORS,1" | sudo tee -a $HOME/.dotrepo/dotfiles/hypr/conf/autostart.conf &>/dev/null
 echo -e "env = LIBVA_DRIVER_NAME,nvidia" | sudo tee -a $HOME/.dotrepo/dotfiles/hypr/conf/autostart.conf &>/dev/null
+echo -e "env = XDG_SESSION_TYPE,wayland" | sudo tee -a $HOME/.dotrepo/dotfiles/hypr/conf/autostart.conf &>/dev/null
+echo -e "env = GBM_BACKEND,nvidia-drm" | sudo tee -a $HOME/.dotrepo/dotfiles/hypr/conf/autostart.conf &>/dev/null
+echo -e "env = __GLX_VENDOR_LIBRARY_NAME,nvidia" | sudo tee -a $HOME/.dotrepo/dotfiles/hypr/conf/autostart.conf &>/dev/null
+echo -e "env = NVD_BACKEND,direct" | sudo tee -a $HOME/.dotrepo/dotfiles/hypr/conf/autostart.conf &>/dev/null
+
+echo -e "cursor {" | sudo tee -a $HOME/.dotrepo/dotfiles/hypr/conf/autostart.conf &>/dev/null
+echo -e "no_hardware_cursors = true" | sudo tee -a $HOME/.dotrepo/dotfiles/hypr/conf/autostart.conf &>/dev/null
+echo -e "}" | sudo tee -a $HOME/.dotrepo/dotfiles/hypr/conf/autostart.conf &>/dev/null
     fi
 }
 
@@ -172,6 +179,7 @@ installing_packages () {
         "wl-clipboard"
         "waybar"
         "rofi-wayland"
+        "egl-wayland"
         "alacritty"
         "dunst"
         "thunar"
