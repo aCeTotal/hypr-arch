@@ -322,7 +322,7 @@ until installing_packages; do : ; done
 until setup_ly; do : ; done
 until setup_mousecursor; do : ; done
 until start_services; do : ; done
-until check_if_laptop; do : ; done
+#until check_if_laptop; do : ; done
 
 systemctl reboot
 
