@@ -231,6 +231,10 @@ installing_packages () {
         "gamemode"
         "discord"
         "gamescope"
+        #DEV
+        "cmake"
+        "ninja"
+        "qt5-base"
     )
 
     # Liste over pakker fra AUR
