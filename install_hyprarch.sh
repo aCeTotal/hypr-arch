@@ -240,6 +240,7 @@ installing_packages () {
         "spotify"
         "ventoy-bin"
         "opentabletdriver-git"
+        "pureref"
         "bibata-cursor-theme"
         "grimblast-git"
         #Gaming
