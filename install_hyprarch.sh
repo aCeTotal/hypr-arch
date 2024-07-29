@@ -214,6 +214,8 @@ installing_packages () {
         "unrar"
         "zip"
         "unzip"
+        "udisks2"
+        "udiskie"
         "pavucontrol"
         "network-manager-applet"
         "freecad"
