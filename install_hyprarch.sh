@@ -239,6 +239,7 @@ installing_packages () {
         "debtap"
         "spotify"
         "ventoy-bin"
+        "opentabletdriver-git"
         "bibata-cursor-theme"
         "grimblast-git"
         #Gaming
