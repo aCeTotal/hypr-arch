@@ -329,6 +329,15 @@ start_services () {
     info_print "Starting services"
     sudo systemctl enable pipewire-pulse.service &>/dev/null
     sudo systemctl enable firewalld.service &>/dev/null
+
+    #NFS PORTS
+    sudo firewall-cmd --zone=public --add-port4000=/tcp --permanent
+    sudo firewall-cmd --zone=public --add-port=4000/udp --permanent
+    sudo firewall-cmd --zone=public --add-port4001=/tcp --permanent
+    sudo firewall-cmd --zone=public --add-port=4001/udp --permanent
+    sudo firewall-cmd --zone=public --add-port4002=/tcp --permanent
+    sudo firewall-cmd --zone=public --add-port=4002/udp --permanent
+    sudo firewall-cmd --reload
 }
 
 check_if_laptop () {
@@ -369,7 +378,7 @@ nfs_shares () {
   info_print "Adding NFS-shares!"
   sudo mkdir -p /mnt/nfs/bigdisk1 &>/dev/null
   sudo chmod go=rwx /mnt/nfs/bigdisk1 && sudo chown $USER: /mnt/nfs/bigdisk1 &>/dev/null
-  echo -e "\n#NFS\n192.168.0.40:/bigdisk1        /mnt//mnt/nfs/bigdisk1       nfs     rw,defaults,noauto,nofail,users,x-systemd.automount,x-systemd.device-timeout=30,_netdev 0 0" | sudo tee -a /etc/fstab >/dev/null
+  echo -e "\n#NFS\n192.168.0.40:/export/bigdisk1        /mnt/nfs/bigdisk1       nfs     rw,defaults,noauto,nofail,users,x-systemd.automount,x-systemd.device-timeout=30,_netdev 0 0" | sudo tee -a /etc/fstab >/dev/null
   
   return 0;
 }
