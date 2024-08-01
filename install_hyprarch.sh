@@ -245,6 +245,7 @@ installing_packages () {
         "spotify"
         "ventoy-bin"
         "opentabletdriver-git"
+        "chitubox-free-bin"
         "pureref"
         "bibata-cursor-theme"
         "grimblast-git"
