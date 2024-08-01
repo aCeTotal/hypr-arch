@@ -371,7 +371,7 @@ nfs_shares () {
   sudo chmod go=rwx /mnt/nfs/bigdisk1 && sudo chown $USER: /mnt/nfs/bigdisk1 &>/dev/null
   echo -e "\n#NFS\n192.168.0.40:/bigdisk1        /mnt//mnt/nfs/bigdisk1       nfs     rw,defaults,noauto,nofail,users,x-systemd.automount,x-systemd.device-timeout=30,_netdev 0 0" | sudo tee -a /etc/fstab >/dev/null
   
-  return 0:
+  return 0;
 }
 
 
