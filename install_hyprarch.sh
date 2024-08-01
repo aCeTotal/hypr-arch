@@ -173,6 +173,7 @@ installing_packages () {
         "git"
         "wget"
         "rsync"
+        "nfs-utils"
         "xorg-xwayland"
         "hyprland"
         "swaybg"
@@ -364,6 +365,15 @@ sudo systemctl start tlp.service &>/dev/null
 return 0;
 }
 
+nfs_shares () {
+  info_print "Adding NFS-shares!"
+  sudo mkdir -p /mnt/nfs/bigdisk1 &>/dev/null
+  sudo chmod go=rwx /mnt/nfs/bigdisk1 && sudo chown $USER: /mnt/nfs/bigdisk1 &>/dev/null
+  echo -e "\n#NFS\n192.168.0.40:/bigdisk1        /mnt//mnt/nfs/bigdisk1       nfs     rw,defaults,noauto,nofail,users,x-systemd.automount,x-systemd.device-timeout=30,_netdev 0 0" | sudo tee -a /etc/fstab >/dev/null
+  
+  return 0:
+}
+
 
 until enabling_multilib; do : ; done
 until install_yay; do : ; done
@@ -377,6 +387,7 @@ until setup_ly; do : ; done
 until setup_mousecursor; do : ; done
 until start_services; do : ; done
 #until check_if_laptop; do : ; done
+until nfs_shares; do : ; done
 
 systemctl reboot
 
