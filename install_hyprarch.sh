@@ -224,6 +224,7 @@ installing_packages () {
         "gimp"
         "steam"
         "libreoffice-still"
+        "mpv"
         #Gaming
         "piper"
         "vulkan-tools"
