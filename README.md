@@ -1,4 +1,5 @@
-How to install hypr-arch (Arch Linux (BTRFS) with Hyprland):
+How to install hypr-arch:
+
 
 1. Download the latest image of Arch Linux and place it on a usb-stick with Ventoy or similar.
 
@@ -12,7 +13,7 @@ How to install hypr-arch (Arch Linux (BTRFS) with Hyprland):
 
 6. bash <(curl -sL bit.ly/install_hyprarch)
 
-7. You can start using your system. (You may need to hit the user icon in the middle of the SDDM/Login screen to select your user.) Make your own changes in hyprland config: vim .config/hypr/hyprland.conf, especially screen resolution, framerate and bindings. Until that happens:
+7. You can start using your system.
 
 SUPER + Enter = Terminal, 
 SUPER + P = App launcher, 
@@ -26,6 +27,5 @@ SUPER + [1-9] = Change workspace
 
 8. In steam, make sure you select Proton Experimental - Bleeding Edge, for the latest version of Proton and DXVK. Very important. (Right click on Proton Experimental -> betas -> Select Bleeding Edge.)
 
-9. Update the system + packages with the command 'update' and install new packages with the command 'install <package>'. (Just a tip and an attempt to make Arch Linux a bit more stable for people who don't update every week.).
 
 10. Good luck! :)
