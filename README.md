@@ -25,13 +25,13 @@ How to install it?
 
 7. You can start using your system.
 
-SUPER + Enter = Terminal 
-SUPER + P = App launcher 
-SUPER + Q = Kill Window
-SUPER + BACKSPACE = Browser 
-SUPER + E = File Browser 
-PrintScreen = SCREENSHOT 
-SUPER + [1-9] = Change workspace
+- SUPER + Enter = Terminal 
+- SUPER + P = App launcher 
+- SUPER + Q = Kill Window
+- SUPER + BACKSPACE = Browser 
+- SUPER + E = File Browser 
+- PrintScreen = SCREENSHOT 
+- SUPER + [1-9] = Change workspace
 
 ================
 
