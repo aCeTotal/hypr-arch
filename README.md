@@ -34,8 +34,6 @@ How to install it?
 - PrintScreen = SCREENSHOT 
 - SUPER + [1-9] = Change workspace
 
-================
-
-8. In steam, make sure you select Proton Experimental - Bleeding Edge, for the latest version of Proton and DXVK. Very important. (Right click on Proton Experimental -> betas -> Select Bleeding Edge.)
+8. In steam, make sure you select Proton Experimental - Bleeding Edge, for the latest version of Proton and DXVK. (Right click on Proton Experimental -> betas -> Select Bleeding Edge.)
 
 9. Good luck! :)
