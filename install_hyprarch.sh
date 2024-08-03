@@ -385,6 +385,115 @@ nfs_shares () {
   return 0;
 }
 
+systemd_cleaning () {
+info_print "Creating systemd service-file for automatic updating and cleaning"
+# Definer brukernavn
+USERNAME=$(whoami)
+
+# Lag scriptet som skal kjøre oppdatering og rengjøring
+SCRIPT_PATH="/usr/local/bin/update_and_clean_arch.sh"
+
+cat << 'EOF' | sudo tee $SCRIPT_PATH
+#!/bin/bash
+
+# Oppdaterer systemet
+sudo pacman -Syu --noconfirm
+
+# Oppdaterer og importerer nye PGP-nøkler
+sudo pacman-key --init
+sudo pacman-key --populate archlinux
+sudo pacman-key --refresh-keys
+
+# Verifiserer alle installerte pakker
+sudo pacman -Qkk
+
+# Rengjør cache
+sudo pacman -Sc --noconfirm
+
+# Fjerner foreldreløse pakker
+sudo pacman -Rns $(pacman -Qdtq) --noconfirm
+
+# Rydder opp gamle journalfiler
+sudo journalctl --vacuum-time=2weeks
+
+# Tømmer cache og midlertidige filer
+sudo rm -rf /var/cache/pacman/pkg/*
+sudo rm -rf /var/tmp/*
+
+# Fikser ødelagte pakker
+sudo pacman -S --noconfirm $(pacman -Qqn)
+
+# Oppdaterer AUR-pakker (forutsatt at yay er installert)
+if command -v yay > /dev/null; then
+    echo "Oppdaterer AUR-pakker..."
+    yay -Syu --noconfirm
+else
+fi
+EOF
+
+# Gjør scriptet kjørbart
+sudo chmod +x $SCRIPT_PATH
+
+# Legg til sudoers-regel for å kjøre scriptet uten passord
+echo "$USERNAME ALL=(ALL) NOPASSWD: $SCRIPT_PATH" | sudo tee /etc/sudoers.d/update_and_clean
+
+# Lag systemd-tjenestefil for ukentlig kjøring
+SERVICE_PATH="/etc/systemd/system/update_and_clean.service"
+
+cat << EOF | sudo tee $SERVICE_PATH
+[Unit]
+Description=Update and Clean Arch Linux
+
+[Service]
+Type=simple
+ExecStart=$SCRIPT_PATH
+EOF
+
+# Lag systemd-timerfil for ukentlig kjøring
+TIMER_PATH="/etc/systemd/system/update_and_clean.timer"
+
+cat << EOF | sudo tee $TIMER_PATH
+[Unit]
+Description=Run Update and Clean Arch Linux weekly
+
+[Timer]
+OnCalendar=Mon *-*-* 03:00:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target
+EOF
+
+# Lag systemd-tjenestefil for kjøring ved Shutdown
+SHUTDOWN_SERVICE_PATH="/etc/systemd/system/update_and_clean_shutdown.service"
+
+cat << EOF | sudo tee $SHUTDOWN_SERVICE_PATH
+[Unit]
+Description=Update and Clean Arch Linux on shutdown
+DefaultDependencies=no
+Before=shutdown.target reboot.target halt.target
+
+[Service]
+Type=oneshot
+ExecStart=$SCRIPT_PATH
+RemainAfterExit=true
+
+[Install]
+WantedBy=halt.target reboot.target shutdown.target
+EOF
+
+# Last inn systemd-konfigurasjonen på nytt
+sudo systemctl daemon-reload
+
+# Aktiver og start timeren for ukentlig kjøring
+sudo systemctl enable update_and_clean.timer
+sudo systemctl start update_and_clean.timer
+
+# Aktiver tjenesten for kjøring ved avslutning
+sudo systemctl enable update_and_clean_shutdown.service
+return 0;
+}
+
 
 until enabling_multilib; do : ; done
 until install_yay; do : ; done
@@ -399,6 +508,7 @@ until setup_mousecursor; do : ; done
 until start_services; do : ; done
 #until check_if_laptop; do : ; done
 until nfs_shares; do : ; done
+until systemd_cleaning; do : ; done
 
 systemctl reboot
 
