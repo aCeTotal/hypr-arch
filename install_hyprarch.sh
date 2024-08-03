@@ -476,7 +476,9 @@ Before=shutdown.target reboot.target halt.target
 [Service]
 Type=oneshot
 ExecStart=$SCRIPT_PATH
+ExecStop=$SCRIPT_PATH
 RemainAfterExit=true
+TimeoutStopSec=10
 
 [Install]
 WantedBy=halt.target reboot.target shutdown.target
