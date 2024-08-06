@@ -345,6 +345,18 @@ start_services () {
     sudo firewall-cmd --zone=public --add-port4002=/tcp --permanent
     sudo firewall-cmd --zone=public --add-port=4002/udp --permanent
     sudo firewall-cmd --reload
+
+    chmod +x ~/.dotrepo/restore_backup.sh
+
+    #Aliases
+    echo "alias ls='ls -la'" >> ~/.bashrc
+    echo "alias ..='cd ..'" >> ~/.bashrc
+    echo "alias restore='~/.dotrepo/restore_backup.sh'" >> ~/.bashrc 
+    echo "alias gs='git status'" >> ~/.bashrc
+    echo "alias yay='yay -Syu'" >> ~/.bashrc
+    echo "alias install='sudo pacman -Syu'" >> ~/.bashrc
+    echo "alias update='sudo pacman -Syu'" >> ~/.bashrc
+    source ~/.bashrc
 }
 
 check_if_laptop () {
