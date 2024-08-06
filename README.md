@@ -2,6 +2,7 @@ What do you get?
 
 - My personal Arch setup with Hyprland. Either fork it or install it and then delete the packages you don't need later.
 - No GRUB, only UEFI Systemd-boot.
+- TTY Restore script lists available snapshots and allows you to easily select one that will replace the current system with read and write permissions.
 - Systemd Service file that runs every time the machine is turned off or once a week, which updates the system, Cleans cache, Updates and imports PGP keys, Verifies all installed packages, Removes orphaned packages, Cleans up old journal files, Clears cache and temporary files and Fix broken packages.
 - LUKS2 encryption of the whole root-partition. Your data will always be safe.
 - Zen-kernel = Stable, Performance Optimizations, Improved Responsiveness, Better Interactivity, Low-Latency Tweaks, Enhanced Scheduler and Better Gaming Performance.
@@ -36,4 +37,6 @@ How to install it?
 
 8. In steam, make sure you select Proton Experimental - Bleeding Edge, for the latest version of Proton and DXVK. (Right click on Proton Experimental -> betas -> Select Bleeding Edge.)
 
-9. Good luck! :)
+9. If you have any problems booting your system, you can log into TTY at any time and type restore. There you get the choice to choose a snapshot (backup).
+   
+11. Good luck! :)
