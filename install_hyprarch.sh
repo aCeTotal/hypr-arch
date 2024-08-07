@@ -374,6 +374,7 @@ sudo modprobe uinput
 sudo rmmod wacom hid_uclogic > /dev/null 2>&1
 
 sudo udevadm control --reload-rules && sudo udevadm trigger
+sudo mkinitcpio -P
 }
 
 check_if_laptop () {
@@ -423,16 +424,12 @@ systemd_cleaning () {
 info_print "Creating systemd service-file for automatic updating and cleaning"
 # Definer variabler
 SCRIPT_PATH="/usr/local/bin/update_and_clean_arch.sh"
-SERVICE_PATH="/etc/systemd/system/update_and_clean_shutdown.service"
 TIMER_PATH="/etc/systemd/system/update_and_clean.timer"
 USERNAME=$(whoami)
 
 # Lag skriptet som skal kjøre oppdatering og rengjøring
 sudo tee $SCRIPT_PATH > /dev/null << 'EOF'
 #!/bin/bash
-
-# Oppdaterer systemet
-sudo pacman -Syu --noconfirm
 
 # Oppdaterer og importerer nye PGP-nøkler
 sudo pacman-key --init
@@ -457,14 +454,6 @@ sudo rm -rf /var/tmp/*
 
 # Fikser ødelagte pakker
 sudo pacman -S --noconfirm $(pacman -Qqn)
-
-# Oppdaterer AUR-pakker (forutsatt at yay er installert)
-if command -v yay > /dev/null; then
-    echo "Oppdaterer AUR-pakker..."
-    yay -Syu --noconfirm
-else
-fi
-systemctl reboot
 EOF
 
 # Gjør skriptet kjørbart
@@ -479,7 +468,7 @@ sudo tee $TIMER_PATH > /dev/null << EOF
 Description=Run Update and Clean Arch Linux on Tuesdays and Thursdays at 12:00
 
 [Timer]
-OnCalendar=Tue,Thu 03:00
+OnCalendar=Tue,Thu 12:00
 Persistent=true
 
 [Install]
