@@ -1,7 +1,7 @@
 What do you get?
 
 - My personal Arch setup with Hyprland. Either fork it or install it and then delete the packages you don't need later.
-- Drawing-tablets works out-of-the-box.
+- Drawing/Graphics tablets works out-of-the-box.
 - Top performance with Nvidia.
 - No GRUB, only UEFI Systemd-boot.
 - LUKS2 encryption of the whole root-partition. Your data will always be safe.
