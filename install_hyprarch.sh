@@ -336,6 +336,7 @@ start_services () {
     info_print "Starting services"
     sudo systemctl enable pipewire-pulse.service &>/dev/null
     sudo systemctl enable firewalld.service &>/dev/null
+    systemctl --user enable opentabletdriver.service --now
 
     #NFS PORTS
     sudo firewall-cmd --zone=public --add-port4000=/tcp --permanent
@@ -346,18 +347,33 @@ start_services () {
     sudo firewall-cmd --zone=public --add-port=4002/udp --permanent
     sudo firewall-cmd --reload
 
-    chmod +x ~/.dotrepo/restore_backup.sh
-
     #Aliases
     echo "alias ls='ls -la'" >> ~/.bashrc
     echo "alias ..='cd ..'" >> ~/.bashrc
-    echo "alias restore='~/.dotrepo/restore_backup.sh'" >> ~/.bashrc 
     echo "alias gs='git status'" >> ~/.bashrc
     echo "alias yay='yay -Syu'" >> ~/.bashrc
     echo "alias upgrade='sudo ./usr/local/bin/update_and_clean_arch.sh'"
     echo "alias install='sudo pacman -Syu'" >> ~/.bashrc
     echo "alias update='sudo pacman -Syu'" >> ~/.bashrc
     source ~/.bashrc
+
+for c in /etc/udev/rules.d/9{0,9}-opentabletdriver.rules; do
+  if [ -f "${c}" ]; then
+    echo "Deleting ${c}"
+    sudo rm "${c}"
+  fi
+done
+
+echo "Finding old kernel module blacklist rules..."
+if [ -f /etc/modprobe.d/blacklist.conf ]; then
+  echo "Deleting /etc/modprobe.d/blacklist.conf"
+  sudo rm /etc/modprobe.d/blacklist.conf
+fi
+
+sudo modprobe uinput
+sudo rmmod wacom hid_uclogic > /dev/null 2>&1
+
+sudo udevadm control --reload-rules && sudo udevadm trigger
 }
 
 check_if_laptop () {
