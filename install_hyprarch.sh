@@ -354,6 +354,7 @@ start_services () {
     echo "alias restore='~/.dotrepo/restore_backup.sh'" >> ~/.bashrc 
     echo "alias gs='git status'" >> ~/.bashrc
     echo "alias yay='yay -Syu'" >> ~/.bashrc
+    echo "alias upgrade='sudo ./usr/local/bin/update_and_clean_arch.sh'"
     echo "alias install='sudo pacman -Syu'" >> ~/.bashrc
     echo "alias update='sudo pacman -Syu'" >> ~/.bashrc
     source ~/.bashrc
@@ -447,6 +448,7 @@ if command -v yay > /dev/null; then
     yay -Syu --noconfirm
 else
 fi
+systemctl reboot
 EOF
 
 # Gjør skriptet kjørbart
@@ -455,29 +457,13 @@ sudo chmod +x $SCRIPT_PATH
 # Legg til sudoers-regel for å kjøre scriptet uten passord
 echo "$USERNAME ALL=(ALL) NOPASSWD: $SCRIPT_PATH" | sudo tee /etc/sudoers.d/update_and_clean > /dev/null
 
-# Lag systemd-tjenestefil for shutdown
-sudo tee $SERVICE_PATH > /dev/null << EOF
-[Unit]
-Description=Update and Clean Arch Linux on shutdown
-DefaultDependencies=no
-Before=shutdown.target halt.target
-
-[Service]
-Type=oneshot
-ExecStart=$SCRIPT_PATH
-RemainAfterExit=true
-
-[Install]
-WantedBy=halt.target shutdown.target
-EOF
-
 # Lag systemd-timerfil for ukentlig kjøring
 sudo tee $TIMER_PATH > /dev/null << EOF
 [Unit]
 Description=Run Update and Clean Arch Linux on Tuesdays and Thursdays at 12:00
 
 [Timer]
-OnCalendar=Tue,Thu 12:00
+OnCalendar=Tue,Thu 03:00
 Persistent=true
 
 [Install]
@@ -490,9 +476,6 @@ sudo systemctl daemon-reload
 # Aktiver og start timeren for ukentlig kjøring
 sudo systemctl enable update_and_clean.timer
 sudo systemctl start update_and_clean.timer
-
-# Aktiver tjenesten for kjøring ved nedstenging
-sudo systemctl enable update_and_clean_shutdown.service
 
 return 0;
 }
