@@ -171,6 +171,7 @@ installing_packages () {
     # Liste over pakker fra offisielle repositorier
     pacman_packages=(
         "git"
+        "github-cli"
         "wget"
         "rsync"
         "nfs-utils"
@@ -356,6 +357,9 @@ start_services () {
     echo "alias install='sudo pacman -Syu'" >> ~/.bashrc
     echo "alias update='sudo pacman -Syu'" >> ~/.bashrc
     source ~/.bashrc
+
+    git config --global user.name  "aCeTotal"
+    git config --global user.email "lars.oksendal@gmail.com"
 
 for c in /etc/udev/rules.d/9{0,9}-opentabletdriver.rules; do
   if [ -f "${c}" ]; then
