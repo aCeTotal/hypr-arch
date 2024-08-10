@@ -420,72 +420,6 @@ nfs_shares () {
   return 0;
 }
 
-systemd_cleaning () {
-info_print "Creating systemd service-file for automatic updating and cleaning"
-# Definer variabler
-SCRIPT_PATH="/usr/local/bin/update_and_clean_arch.sh"
-TIMER_PATH="/etc/systemd/system/update_and_clean.timer"
-USERNAME=$(whoami)
-
-# Lag skriptet som skal kjøre oppdatering og rengjøring
-sudo tee $SCRIPT_PATH > /dev/null << 'EOF'
-#!/bin/bash
-
-# Oppdaterer og importerer nye PGP-nøkler
-sudo pacman-key --init
-sudo pacman-key --populate archlinux
-sudo pacman-key --refresh-keys
-
-# Verifiserer alle installerte pakker
-sudo pacman -Qkk
-
-# Rengjør cache
-sudo pacman -Sc --noconfirm
-
-# Fjerner foreldreløse pakker
-sudo pacman -Rns $(pacman -Qdtq) --noconfirm
-
-# Rydder opp gamle journalfiler
-sudo journalctl --vacuum-time=2weeks
-
-# Tømmer cache og midlertidige filer
-sudo rm -rf /var/cache/pacman/pkg/*
-sudo rm -rf /var/tmp/*
-
-# Fikser ødelagte pakker
-sudo pacman -S --noconfirm $(pacman -Qqn)
-EOF
-
-# Gjør skriptet kjørbart
-sudo chmod +x $SCRIPT_PATH
-
-# Legg til sudoers-regel for å kjøre scriptet uten passord
-echo "$USERNAME ALL=(ALL) NOPASSWD: $SCRIPT_PATH" | sudo tee /etc/sudoers.d/update_and_clean > /dev/null
-
-# Lag systemd-timerfil for ukentlig kjøring
-sudo tee $TIMER_PATH > /dev/null << EOF
-[Unit]
-Description=Run Update and Clean Arch Linux on Tuesdays and Thursdays at 12:00
-
-[Timer]
-OnCalendar=Tue,Thu 12:00
-Persistent=true
-
-[Install]
-WantedBy=timers.target
-EOF
-
-# Last inn systemd-konfigurasjonen på nytt
-sudo systemctl daemon-reload
-
-# Aktiver og start timeren for ukentlig kjøring
-sudo systemctl enable update_and_clean.timer
-sudo systemctl start update_and_clean.timer
-
-return 0;
-}
-
-
 until enabling_multilib; do : ; done
 until install_yay; do : ; done
 until clone_dotfiles; do : ; done 
@@ -499,7 +433,6 @@ until setup_mousecursor; do : ; done
 until start_services; do : ; done
 #until check_if_laptop; do : ; done
 until nfs_shares; do : ; done
-until systemd_cleaning; do : ; done
 
 systemctl reboot
 
