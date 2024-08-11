@@ -196,7 +196,6 @@ installing_packages () {
         "hyprlock"
         "firefox"
         "ttf-font-awesome"
-        "vim"
         "fastfetch"
         "ttf-fira-sans" 
         "ttf-fira-code"
