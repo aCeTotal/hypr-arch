@@ -170,6 +170,7 @@ installing_packages () {
 
     # Liste over pakker fra offisielle repositorier
     pacman_packages=(
+        "neovim"
         "git"
         "github-cli"
         "wget"
