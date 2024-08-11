@@ -1,9 +1,8 @@
 #!/usr/bin/env -S bash -e
 
-# Fixing annoying issue that breaks GitHub Actions
-# shellcheck disable=SC2001
-
 # Cleaning the TTY.
+sudo pacman -Sy &>/dev/null
+sudo pacman-key --init  &>/dev/null
 clear
 
 # Cosmetics (colours for text).
@@ -29,230 +28,361 @@ error_print () {
     echo -e "${BOLD}${BRED}[ ${BBLUE}•${BRED} ] $1${RESET}"
 }
 
-# Welcome screen.
-echo -ne "${BOLD}${BYELLOW}
-======================================================================
+install_yay () {
+    info_print "Installing the AUR-helper - Yay."
+    git clone https://aur.archlinux.org/yay-git.git ~/yay-git &>/dev/null
+    cd ~/yay-git &>/dev/null
+    makepkg -si --noconfirm &>/dev/null
+    cd && rm -rf ~/yay-git &>/dev/null
+}
 
-██╗  ██╗██╗   ██╗██████╗ ██████╗        █████╗ ██████╗  ██████╗██╗  ██╗
-██║  ██║╚██╗ ██╔╝██╔══██╗██╔══██╗      ██╔══██╗██╔══██╗██╔════╝██║  ██║
-███████║ ╚████╔╝ ██████╔╝██████╔╝█████╗███████║██████╔╝██║     ███████║
-██╔══██║  ╚██╔╝  ██╔═══╝ ██╔══██╗╚════╝██╔══██║██╔══██╗██║     ██╔══██║
-██║  ██║   ██║   ██║     ██║  ██║      ██║  ██║██║  ██║╚██████╗██║  ██║
-╚═╝  ╚═╝   ╚═╝   ╚═╝     ╚═╝  ╚═╝      ╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝
-                                                                       
-======================================================================
-${RESET}"
-info_print "Welcome to the last part of installing Hypr-Arch!"
+enabling_multilib () {
+    info_print "Enabling multilib."
+    sudo sed -i "/\[multilib\]/,/Include/"'s/^#//' /etc/pacman.conf &>/dev/null
+    sudo pacman -Syu --noconfirm &>/dev/null
+}
 
-sleep 2
+clone_dotfiles () {
+    info_print "Cloning the dotfiles and creating symbolic links."
 
-# Enable multilib for packages like Steam (function)
-info_print "Enabling multilib"
-sudo sed -i "/\[multilib\]/,/Include/"'s/^#//' /etc/pacman.conf
-sudo pacman -Syu --noconfirm
+    REPO_URL="https://github.com/aCeTotal/arch_dotfiles.git"
+    CLONE_DIR="$HOME/.dotrepo"
+    DOTFILES_DIR="$CLONE_DIR/dotfiles"
+    TARGET_DIR="$HOME/.config"
 
-# Cloning the dotfiles and wallpaper (function)
-info_print "Cloning the dotfiles and moving them to ~/.config + adding the default wallpaper"
-cd && git clone https://github.com/aCeTotal/hypr-arch.git >/dev/null
-cd hypr-arch >/dev/null
-cp -r dotfiles/* ~/.config >/dev/null
-sudo mkdir -p /usr/share/wallpapers/
-sudo cp dotfiles/wallpapers/* /usr/share/wallpapers/
+    git clone "$REPO_URL" "$CLONE_DIR" &>/dev/null
 
-# Installing the AUR-Helper YAY (function).
-info_print "Installing the AUR-Helper - YAY"
-git clone https://aur.archlinux.org/yay.git >/dev/null
-cd yay && makepkg -si --noconfirm >/dev/null
-cd .. && rm -rf yay >/dev/null
-yay -R --noconfirm xdg-desktop-portal-gnome xdg-desktop-portal-gtk >/dev/null
+    if [ $? -ne 0 ]; then
+         echo "The cloning failed!"
+        exit 1
+    fi
 
-# Adding the current user to the input group (function)
-info_print "Adding the $USER to the input group"
-sudo gpasswd -a $USER input >/dev/null
+    if [ -d "$TARGET_DIR" ]; then
+        rm -rf "$TARGET_DIR"/*
+    else
+        mkdir -p "$TARGET_DIR"
+    fi
 
-# Installing systempackages (function)
-info_print "Installing system packages!"
-sudo pacman -Syu --noconfirm sddm nfs-utils qt5-wayland qt5ct wofi xdg-desktop-portal-hyprland qt6-wayland qt6ct qt5-svg qt5-quickcontrols2 qt5-graphicaleffects gtk3 polkit-gnome pipewire pipewire-pulse pipewire-jack jq
-sudo pacman -Syu --noconfirm swaybg thunar
-sudo pacman -Syu --noconfirm wireplumber pkgfile linux-headers rmlint rebuild-detector p7zip unrar zip unzip
-sudo pacman -Syu --noconfirm pavucontrol
-yay -Syu --noconfirm downgrade thorium-browser-bin bibata-cursor-theme wdisplays
+    for item in "$DOTFILES_DIR"/*; do
+        itemname=$(basename "$item")
+        ln -sfn "$item" "$TARGET_DIR/$itemname"
+    done
+}
 
-info_print "Installing Gaming-related packages!"
-sudo pacman -Syu piper vulkan-tools wine-staging gamescope gamemode mangohud lutris
+usergroups () {
+    info_print "Adding user $USER to the input group"
+    sudo gpasswd -a $USER wheel input &>/dev/null
+    return 0;
+}
 
-info_print "Installing the Xbox Controller & Dongle support"
-git clone https://github.com/medusalix/xone
-cd xone && sudo ./install.sh --release
-sudo xone-get-firmware.sh
+nvidia_check () {
+    if lspci -k | grep -A 2 -E "(VGA|3D)" | grep -iq nvidia; then
+        info_print "NVIDIA GPU FOUND! Installing nvidia-related packages."
+        sudo pacman -Syu --noconfirm --needed nvidia-dkms cuda libva-nvidia-driver nvidia-utils lib32-nvidia-utils &>/dev/null
 
-info_print "Installing Kodi $ Retroarch"
-sudo pacman -Syu kodi retroarch retroarch-assets-xmb
+        info_print "Creating modprobe config for your Nvidia card for max performance and wayland support." 
+        sudo mkdir -p /etc/modprobe.d &>/dev/null
+        sudo touch /etc/modprobe.d/nvidia.conf &>/dev/null
+        echo -e "" | sudo tee -a /etc/mkinitcpio.conf
+        echo -e "\nMODULES=(btrfs nvidia nvidia_modeset nvidia_uvm nvidia_drm)" | sudo tee -a /etc/mkinitcpio.conf &>/dev/null
 
-
-# Check if NVIDIA GPU is found
-if lspci -k | grep -A 2 -E "(VGA|3D)" | grep -iq nvidia; then
-info_print "NVIDIA GPU FOUND! Installing nvidia-related packages!"  
-yay -Syu --noconfirm --needed nvidia-dkms libva libva-nvidia-driver hyprland nvidia-utils lib32-nvidia-utils >/dev/null
-sudo pacman -Syu steam
-
-info_print "Creating modprobe config for your Nvidia card for max performance and wayland support" 
-   sudo mkdir -p /etc/modprobe.d >/dev/null
-   sudo touch /etc/modprobe.d/nvidia.conf >/dev/null
-   echo -e "\nMODULES=(btrfs nvidia nvidia_modeset nvidia_uvm nvidia_drm)" | sudo tee -a /etc/mkinitcpio.conf >/dev/null
-   
-   sudo tee /etc/modprobe.d/nvidia.conf > /dev/null <<'TXT'
-   options nvidia-drm modeset=1
-   options nvidia NVreg_UsePageAttributeTable=1
-   options nvidia NVreg_EnablePCIeGen3=1
-   options nvidia NVreg_EnableResizableBar=1
-   options nvidia NVreg_RegistryDwords="PowerMizerEnable=0x1; PerfLevelSrc=0x2222; PowerMizerLevel=0x3; PowerMizerDefault=0x3; PowerMizerDefaultAC=0x3"
-TXT
-   
-   sudo mkinitcpio -P >/dev/null
-
-   # Adding Pacman hook to update initramfs after Nvidia driver upgrade
-info_print "Creating Pacman hook to automatically update initramfs after every nvidia-driver upgrade" 
-   sudo tee /etc/pacman.d/hooks/nvidia.hook > /dev/null <<'TXT'
-  [Trigger]
-  Operation=Install
-  Operation=Upgrade
-  Operation=Remove
-  Type=Package
-  Target=nvidia-dkms
-  Target=linux-zen
-
-  [Action]
-  Description=Update NVIDIA module in initcpio
-  Depends=mkinitcpio
-  When=PostTransaction
-  NeedsTargets
-  Exec=/bin/sh -c 'while read -r trg; do case $trg in linux*) exit 0; esac; done; /usr/bin/mkinitcpio -P'
+        sudo tee /etc/modprobe.d/nvidia.conf > /dev/null <<'TXT'
+options nvidia_drm modeset=1 fbdev=1
+options nvidia NVreg_UsePageAttributeTable=1
+options nvidia NVreg_EnablePCIeGen3=1
+options nvidia NVreg_EnableResizableBar=1
+options nvidia NVreg_RegistryDwords="PowerMizerEnable=0x1; PerfLevelSrc=0x2222; PowerMizerLevel=0x3; PowerMizerDefault=0x3; PowerMizerDefaultAC=0x3"
 TXT
 
-   sudo sed -i 's/GRUB_CMDLINE_LINUX_DEFAULT="loglevel=3 quiet"/GRUB_CMDLINE_LINUX_DEFAULT="loglevel=3 quiet nvidia_drm.modeset=1"/g' /etc/default/grub
-   sudo sed -i 's/GRUB_TIMEOUT=5/GRUB_TIMEOUT=1/g' /etc/default/grub 
-   sudo grub-mkconfig -o /boot/grub/grub.cfg
+        sudo mkinitcpio -P &>/dev/null
 
-else
-   yay -Syu --noconfirm hyprland
-   sudo pacman -Syu steam
+        info_print "Creating Pacman hook to automatically update initramfs after every nvidia-driver upgrade" 
+        sudo tee /etc/pacman.d/hooks/nvidia.hook > /dev/null <<'TXT'
+[Trigger]
+Operation=Install
+Operation=Upgrade
+Operation=Remove
+Type=Package
+Target=nvidia-dkms
+Target=linux-zen
 
-   echo -e "\nMODULES=(btrfs)" | sudo tee -a /etc/mkinitcpio.conf >/dev/null
-   sudo sed -i 's/GRUB_TIMEOUT=5/GRUB_TIMEOUT=1/g' /etc/default/grub 
-   sudo grub-mkconfig -o /boot/grub/grub.cfg
-fi
+[Action]
+Description=Update NVIDIA module in initcpio
+Depends=mkinitcpio
+When=PostTransaction
+NeedsTargets
+Exec=/bin/sh -c 'while read -r trg; do case $trg in linux*) exit 0; esac; done; /usr/bin/mkinitcpio -P'
+TXT
 
-info_print "Installing some nice packages"
-yay -Syu --noconfirm --needed alacritty spotify
+info_print "Enabling Nvidia raytracing"
+echo "#Nvidia variables:" > /dev/null
+echo "VKD3D_CONFIG=dxr11,dxr" | sudo tee -a "/etc/environment" > /dev/null
+echo "PROTON_ENABLE_NVAPI=1" | sudo tee -a "/etc/environment" > /dev/null
+echo "PROTON_ENABLE_NGX_UPDATER=1" | sudo tee -a "/etc/environment" > /dev/null
 
-# Adding theme for SDDM
-input_print "Installing the SDDM Theme - Deepin"
-git clone https://github.com/ArtemSmaznov/SDDM-themes.git
-cd SDDM-themes
-sudo cp -r deepin/ /usr/share/sddm/themes/
-sudo mkdir -p /etc/sddm.conf.d/
-sudo cp /usr/lib/sddm/sddm.conf.d/default.conf /etc/sddm.conf.d/default.conf
-sudo sed -i "s/^Current=/Current=deepin/g" /etc/sddm.conf.d/default.conf
+echo -e "cursor {" | sudo tee -a $HOME/.dotrepo/dotfiles/hypr/conf/autostart.conf &>/dev/null
+echo -e "no_hardware_cursors = true" | sudo tee -a $HOME/.dotrepo/dotfiles/hypr/conf/autostart.conf &>/dev/null
+echo -e "}" | sudo tee -a $HOME/.dotrepo/dotfiles/hypr/conf/autostart.conf &>/dev/null
+    fi
+}
 
-# Enable services
-input_print "Enabling services"
-sudo systemctl enable bluetooth.service >/dev/null
-sudo systemctl enable sddm >/dev/null
+intel_check () {
+    if lspci -k | grep -A 2 -E "(VGA|3D)" | grep -iq intel; then
+        info_print "Intel GPU FOUND! Installing Intel-related packages."
 
-# Creating the Hyprland wayland session
-sudo mkdir -p /usr/share/wayland-sessions >/dev/null
-echo -e "[Desktop Entry]\nName=Hyprland\nComment=An intelligent dynamic tiling Wayland compositor\nExec=Hyprland\nType=Application" | sudo tee -a /usr/share/wayland-sessions/hyprland.conf >/dev/null
+        echo -e "" | sudo tee -a /etc/mkinitcpio.conf &>/dev/null
+        echo -e "\nMODULES=(btrfs)" | sudo tee -a /etc/mkinitcpio.conf &>/dev/null
+        sudo pacman -Syu mesa lib32-mesa vulkan-intel --noconfirm --needed
+        info_print "Enabling Intel-raytracing support!"
+        echo "#Intel Variables" | sudo tee -a "/etc/environment" > /dev/null
+        echo "VKD3D_CONFIG=dxr11,dxr" | sudo tee -a "/etc/environment" > /dev/null
+    fi
+}
 
-# NFS shares
-input_print "Do you want to add some NFS shares? [y/N]?: "
-read -r nfs_response1
-if [[ "${nfs_response1,,}" =~ ^(yes|y)$ ]]; then
-  input_print "Type the server path for the first one. eg. 192.168.0.40:/bigdisk1 : "
-  read -r servershare1
-  input_print "Choose a name of the mounting folder: eg. bigdisk1 :"
-  read -r mountfolder1
-  sudo mkdir -p /mnt/$mountfolder1
-  sudo chmod go=rwx /mnt/$mountfolder1 && sudo chown $USER: /mnt/$mountfolder1
-  echo -e "\n#NFS\n$servershare1        /mnt/$mountfolder1       nfs     rw,defaults,noauto,nofail,users,x-systemd.automount,x-systemd.device-timeout=30,_netdev 0 0" | sudo tee -a /etc/fstab >/dev/null
-  input_print "NFS share added to fstab! Do you want to add another one? [y/N]?: "
-  read -r nfs_response2
-fi
+amd_check () {
+    if lspci -k | grep -A 2 -E "(VGA|3D)" | grep -iq amd; then
+        info_print "AMD GPU FOUND! Installing AMD-related packages."
 
-if [[ "${nfs_response2,,}" =~ ^(yes|y)$ ]]; then
-  input_print "Type the server path for the second one. eg. 192.168.0.40:/bigdisk2 : "
-  read -r servershare2
-  input_print "Choose a name of the mounting folder: eg. bigdisk2 : "
-  read -r mountfolder2
-  sudo mkdir -p /mnt/$mountfolder2
-  sudo chmod go=rwx /mnt/$mountfolder2 && sudo chown $USER: /mnt/$mountfolder2
-  echo -e "\n\n$servershare2        /mnt/$mountfolder2       nfs     rw,defaults,noauto,nofail,users,x-systemd.automount,x-systemd.device-timeout=30,_netdev 0 0" | sudo tee -a /etc/fstab >/dev/null
-  input_print "NFS share added to fstab! Do you want to add another one? [y/N]?: "
-  read -r nfs_response3
-fi
+        echo -e "" | sudo tee -a /etc/mkinitcpio.conf &>/dev/null
+        echo -e "\nMODULES=(btrfs)" | sudo tee -a /etc/mkinitcpio.conf &>/dev/null
+        sudo pacman -Syu mesa lib32-mesa vulkan-radeon --noconfirm --needed
+        info_print "Enabling AMD-raytracing support!"
+        echo "#AMD Variables" | sudo tee -a "/etc/environment" > /dev/null
+        echo "RADV_PERFTEST='rt'" | sudo tee -a "/etc/environment" > /dev/null
+    fi
+}
 
-if [[ "${nfs_response3,,}" =~ ^(yes|y)$ ]]; then
-  input_print "Type the server path for the second one. eg. 192.168.0.40:/bigdisk2 : "
-  read -r servershare3
-  input_print "Choose a name of the mounting folder: eg. bigdisk2 : "
-  read -r mountfolder3
-  sudo mkdir -p /mnt/$mountfolder3
-  sudo chmod go=rwx /mnt/$mountfolder3 && sudo chown $USER: /mnt/$mountfolder3
-  echo -e "\n\n$servershare3        /mnt/$mountfolder3       nfs     rw,defaults,noauto,nofail,users,x-systemd.automount,x-systemd.device-timeout=30,_netdev 0 0" | sudo tee -a /etc/fstab >/dev/null
-  input_print "NFS share added to fstab! If you want to add more shares, please manually add them in /etc/fstab: "
-else
-   input_print "Continuing the installation of Hypr-Arch..."
-fi
 
-# Cursor Theme
-input_print "Changing the cursor theme to: Bibata-Modern-Ice"
-sudo rm /usr/share/icons/default/index.theme
-sudo touch /usr/share/icons/default/index.theme
-sudo tee /usr/share/icons/default/index.theme > /dev/null <<'TXT'
+installing_packages () {
+    info_print "Installing all the packages! (This may take some time)."
+
+    # Fil for logging
+    log_file="install_log.txt"
+
+    # Liste over pakker fra offisielle repositorier
+    pacman_packages=(
+        #xorg
+        "xorg-server"
+        "xorg-xinit"
+        "xorg-xrandr"
+        "xorg-xsetroot"
+        "plasma-meta"
+        "xterm"
+        "git"
+        "github-cli"
+        "wget"
+        "rsync"
+        "nfs-utils"
+        #"xorg-xwayland"
+        #"hyprland"
+        #"swaybg"
+        #"wl-clipboard"
+        #"waybar"
+        #"rofi-wayland"
+        #"egl-wayland"
+        "alacritty"
+        #"dunst"
+        "lxappearance"
+        "thunar"
+        "thunar-media-tags-plugin"
+        "thunar-volman"
+        "thunar-archive-plugin"
+        #"xdg-desktop-portal-hyprland"
+        #"qt5-wayland"
+        #"qt6-wayland"
+        #"hyprlock"
+        "firefox"
+        "ttf-font-awesome"
+        "vim"
+        "fastfetch"
+        "ttf-fira-sans" 
+        "ttf-fira-code"
+        "adobe-source-code-pro-fonts"
+        "ttf-firacode-nerd"
+        "ttf-jetbrains-mono-nerd"
+        "papirus-icon-theme"
+        "fuse2"
+        "htop"
+        "gtk4"
+        "libadwaita"
+        "jq"
+        "python-gobject"
+        "nfs-utils"
+        "pipewire"
+        "pipewire-pulse"
+        "wireplumber"
+        "network-manager-sstp"
+        "sstp-client"
+        "firewalld"
+        "p7zip"
+        "unrar"
+        "zip"
+        "unzip"
+        "udisks2"
+        "udiskie"
+        "pavucontrol"
+        "network-manager-applet"
+        "steam"
+        "mpv"
+        "bluez"
+        "bluez-utils"
+        #HTPC
+        "kodi"
+        "kodi-addon-peripheral-joystick"
+        "kodi-platform"
+        "mediaelch"
+        "kodi-addon-screensaver-matrixtrails"
+        "retroarch"
+        "retroarch-assets-xmb"
+        #Gaming
+        "piper"
+        "vulkan-tools"
+        "lutris"
+        "gvfs"
+        "mangohud"
+        "gamemode"
+        "discord"
+        "gamescope"
+    )
+
+    # Liste over pakker fra AUR
+    aur_packages=(
+        "brave-bin"
+        "debtap"
+        "spotify"
+        #"ventoy-bin"
+        #"opentabletdriver-git"
+        #"chitubox-free-bin"
+        #"pureref"
+        "bibata-cursor-theme"
+        #"grimblast-git"
+        #Gaming
+        "xone-dkms-git"
+        "xone-dongle-firmware"
+    )
+
+    # Oppdater systemet med pacman
+    echo "Oppdaterer systemet med pacman..." | tee -a "$log_file" &>/dev/null
+    if yes | sudo pacman -Syu --noconfirm --needed &>/dev/null; then
+        echo "System oppdatert med pacman" | tee -a "$log_file" &>/dev/null
+    else
+        echo "Feil ved oppdatering av systemet med pacman" | tee -a "$log_file" &>/dev/null 
+        exit 1 &>/dev/null
+    fi
+
+    # Installer pacman-pakker
+    echo "Installerer pacman-pakker..." | tee -a "$log_file" &>/dev/null
+    for package in "${pacman_packages[@]}"; do &>/dev/null
+        attempt=1
+        max_attempts=3
+        success=false
+
+        while [[ $attempt -le $max_attempts ]]; do
+            if yes | sudo pacman -Syu --noconfirm --needed "$package" &>/dev/null; then
+                echo "Installert: $package" | tee -a "$log_file" &>/dev/null
+                success=true
+                break
+            else
+                echo "Feil ved installasjon av $package, forsøk $attempt" | tee -a "$log_file" &>/dev/null
+            fi
+            ((attempt++))
+        done
+
+        if [[ $success == false ]]; then
+            echo "Mislyktes å installere $package etter $max_attempts forsøk" | tee -a "$log_file" &>/dev/null
+        fi
+    done
+
+    # Installer AUR-pakker
+    echo "Installerer AUR-pakker..." | tee -a "$log_file" &>/dev/null
+    for package in "${aur_packages[@]}"; do &>/dev/null
+        attempt=1
+        max_attempts=3
+        success=false
+
+        while [[ $attempt -le $max_attempts ]]; do &>/dev/null
+            if yay -Syu --noconfirm "$package" &>/dev/null; then
+                echo "Installert: $package" | tee -a "$log_file" &>/dev/null
+                success=true
+                break
+            else
+                echo "Feil ved installasjon av $package, forsøk $attempt" | tee -a "$log_file" &>/dev/null
+            fi
+            ((attempt++))
+        done
+
+        if [[ $success == false ]]; then &>/dev/null
+            echo "Mislyktes å installere $package etter $max_attempts forsøk" | tee -a "$log_file" &>/dev/null
+        fi
+    done
+
+    echo "Alle pakker er installert." | tee -a "$log_file"
+}
+
+setup_ly () {
+    info_print "Installing Ly - display manager."
+    sudo pacman -Syu ly --noconfirm &>/dev/null
+    sudo systemctl enable ly.service &>/dev/null
+}
+
+setup_mousecursor () {
+    input_print "Changing the cursor theme to: Bibata-Modern-Ice"
+    sudo rm /usr/share/icons/default/index.theme &>/dev/null
+    sudo touch /usr/share/icons/default/index.theme &>/dev/null
+    sudo tee /usr/share/icons/default/index.theme > /dev/null <<'TXT'
 [icon theme] 
 Inherits=Bibata-Modern-Ice
 TXT
+}
 
-# Adding some aliases
-input_print "Adding some aliases, like update (Safely updates the system) or install <package>"
-cd && rm .bashrc && touch .bashrc
-.bashrc > /dev/null <<'TXT'
- #
- # ~/.bashrc
- #
- 
- # If not running interactively, don't do anything
- [[ $- != *i* ]] && return
- 
- alias ls='ls -lah --color=auto'
- alias l.='ls -d .* --color=auto'
- alias grep='grep --color=auto'
- alias update='sudo pacman-key --init && sudo pacman-key --populate && sudo pacman -Sy archlinux-keyring --noconfirm && sudo pacman -Su && yay -Syu'
- alias install='yay -Syu'
- alias c='clear'
- alias diff='colordiff'
- alias mount='mount |column -t'
- 
- alias hyprconf='vim ~/.config/hypr/hyprland.conf'
- alias .config='cd ~/.config'
- 
- ## a quick way to get out of current directory ##
- alias ..='cd ..'
- alias ...='cd ../../../'
- alias ....='cd ../../../../'
- alias .....='cd ../../../../../'
- PS1='[\u@\h \W]\$ '
- 
- source /usr/share/doc/pkgfile/command-not-found.bash
-TXT
-source ~/.bashrc
+start_services () {
+    info_print "Starting services"
+    sudo systemctl enable pipewire-pulse.service &>/dev/null
+    sudo systemctl enable firewalld.service &>/dev/null
+    systemctl --user enable opentabletdriver.service --now
 
-# Installing informant last because it is destroying my autoinstall script.
-input_print "Installing the package - Informant."
-yay -Syu --noconfirm informant >/dev/null
-sudo gpasswd -a $USER informant >/dev/null
+    #NFS PORTS
+    sudo firewall-cmd --zone=public --add-port4000=/tcp --permanent
+    sudo firewall-cmd --zone=public --add-port=4000/udp --permanent
+    sudo firewall-cmd --zone=public --add-port4001=/tcp --permanent
+    sudo firewall-cmd --zone=public --add-port=4001/udp --permanent
+    sudo firewall-cmd --zone=public --add-port4002=/tcp --permanent
+    sudo firewall-cmd --zone=public --add-port=4002/udp --permanent
+    sudo firewall-cmd --reload
 
-# Removing install files and reboot the system
-input_print "REBOOTING THE SYSTEM!"
-rm -rf ~/hypr-arch
-reboot
+    #Aliases
+    echo "alias ls='ls -la'" >> ~/.bashrc
+    echo "alias ..='cd ..'" >> ~/.bashrc
+    echo "alias gs='git status'" >> ~/.bashrc
+    echo "alias yay='yay -Syu'" >> ~/.bashrc
+    echo "alias install='sudo pacman -Syu'" >> ~/.bashrc
+    echo "alias update='sudo pacman -Syu'" >> ~/.bashrc
+    source ~/.bashrc
+
+    git config --global user.name  "aCeTotal"
+    git config --global user.email "lars.oksendal@gmail.com"
+}
+
+nfs_shares () {
+  info_print "Adding NFS-shares!"
+  sudo mkdir -p /mnt/nfs/bigdisk1 &>/dev/null
+  sudo chmod go=rwx /mnt/nfs/bigdisk1 && sudo chown $USER: /mnt/nfs/bigdisk1 &>/dev/null
+  echo -e "\n#NFS\n192.168.0.40:/export/bigdisk1        /mnt/nfs/bigdisk1       nfs     rw,defaults,noauto,nofail,users,x-systemd.automount,x-systemd.device-timeout=30,_netdev 0 0" | sudo tee -a /etc/fstab >/dev/null
+  
+  return 0;
+}
+
+until enabling_multilib; do : ; done
+until install_yay; do : ; done
+until clone_dotfiles; do : ; done 
+until usergroups; do : ; done
+until nvidia_check; do : ; done
+until intel_check; do : ; done
+until amd_check; do : ; done
+until installing_packages; do : ; done
+until setup_ly; do : ; done
+until setup_mousecursor; do : ; done
+until start_services; do : ; done
+until nfs_shares; do : ; done
+
+systemctl reboot
