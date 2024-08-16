@@ -174,6 +174,7 @@ installing_packages () {
     pacman_packages=(
         "neovim"
         "ripgrep"
+        "xsel"
         "git"
         "github-cli"
         "wget"
