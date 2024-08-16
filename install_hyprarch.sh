@@ -34,12 +34,14 @@ install_yay () {
     cd ~/yay-git &>/dev/null
     makepkg -si --noconfirm &>/dev/null
     cd && rm -rf ~/yay-git &>/dev/null
+    return 0;
 }
 
 enabling_multilib () {
     info_print "Enabling multilib."
     sudo sed -i "/\[multilib\]/,/Include/"'s/^#//' /etc/pacman.conf &>/dev/null
     sudo pacman -Syu --noconfirm &>/dev/null
+    return 0;
 }
 
 clone_dotfiles () {
