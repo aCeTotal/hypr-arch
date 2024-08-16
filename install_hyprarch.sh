@@ -175,6 +175,7 @@ installing_packages () {
         "neovim"
         "ripgrep"
         "xsel"
+        "python"
         "git"
         "github-cli"
         "wget"
