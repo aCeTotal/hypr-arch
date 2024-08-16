@@ -426,6 +426,17 @@ nfs_shares () {
   return 0;
 }
 
+neovim_install () {
+    info_print "Configuring Neovim"
+    git clone --depth 1 https://github.com/wbthomason/packer.nvim\
+    ~/.local/share/nvim/site/pack/packer/start/packer.nvim
+
+    #nvim ~/.config/nvim/lua/acetotal/packer.lua
+    #:PackerSync
+
+    return 0;
+}
+
 until enabling_multilib; do : ; done
 until install_yay; do : ; done
 until clone_dotfiles; do : ; done 
@@ -439,6 +450,7 @@ until setup_mousecursor; do : ; done
 until start_services; do : ; done
 #until check_if_laptop; do : ; done
 until nfs_shares; do : ; done
+until neovim_install; do : ; done
 
 systemctl reboot
 
