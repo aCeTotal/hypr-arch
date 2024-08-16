@@ -175,6 +175,7 @@ installing_packages () {
         "neovim"
         "ripgrep"
         "python-pynvim"
+        "npm"
         "git"
         "github-cli"
         "wget"
