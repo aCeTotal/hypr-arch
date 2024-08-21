@@ -253,6 +253,13 @@ installing_packages () {
         "ninja"
         "qt5-base"
         "scons"
+        "python"
+        "vulkan-icd-loader"
+        "vulkan-headers"
+        "vulkan-tools"
+        "glfw"
+        "glu"
+        
     )
 
     # Liste over pakker fra AUR
