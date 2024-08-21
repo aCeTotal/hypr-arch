@@ -252,6 +252,7 @@ installing_packages () {
         "cmake"
         "ninja"
         "qt5-base"
+        "scons"
     )
 
     # Liste over pakker fra AUR
